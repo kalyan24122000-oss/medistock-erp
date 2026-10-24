@@ -1,0 +1,154 @@
+/* renderer/css/print.css - Thermal Receipt (80mm) and A4 GST Tax Invoice Print Styles */
+
+@media screen {
+  .print-only {
+    display: none !important;
+  }
+}
+
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11px !important;
+  }
+
+  #sidebar,
+  #topbar,
+  .billing-header-card,
+  .billing-search-row,
+  .billing-actions,
+  .shortcuts-bar,
+  .modal-close,
+  .modal-footer,
+  .btn,
+  #toast-container {
+    display: none !important;
+  }
+
+  #app-container,
+  #main-wrapper,
+  #view-container {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  /* 80mm Thermal Receipt Layout */
+  .thermal-receipt {
+    width: 76mm;
+    margin: 0 auto;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    line-height: 1.25;
+    color: #000;
+  }
+
+  .thermal-header {
+    text-align: center;
+    border-bottom: 1px dashed #000;
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+  }
+
+  .thermal-title {
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .thermal-meta {
+    font-size: 10px;
+    margin-top: 2px;
+  }
+
+  .thermal-bill-info {
+    border-bottom: 1px dashed #000;
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+    font-size: 10.5px;
+  }
+
+  .thermal-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10.5px;
+    margin-bottom: 6px;
+  }
+
+  .thermal-table th {
+    border-bottom: 1px solid #000;
+    text-align: left;
+    padding: 2px 0;
+  }
+
+  .thermal-table td {
+    padding: 2px 0;
+  }
+
+  .thermal-totals {
+    border-top: 1px dashed #000;
+    padding-top: 4px;
+    margin-top: 4px;
+    border-bottom: 1px dashed #000;
+    padding-bottom: 4px;
+  }
+
+  .thermal-total-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+  }
+
+  .thermal-grand-total {
+    font-size: 13px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2px;
+  }
+
+  .thermal-footer {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 10px;
+  }
+
+  /* A4 Invoice Layout */
+  .a4-invoice {
+    width: 100%;
+    padding: 10mm;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    color: #000;
+  }
+
+  .a4-header {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 2px solid #000;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+
+  .a4-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+
+  .a4-table th, .a4-table td {
+    border: 1px solid #333;
+    padding: 5px;
+    font-size: 11px;
+  }
+
+  .a4-table th {
+    background-color: #f0f0f0;
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "name": "medistock-erp",
+  "productName": "MediStock ERP",
+  "version": "1.0.0",
+  "description": "Complete Pharmacy Management Desktop ERP — Inspired by MARG ERP workflows with modern architecture",
+  "main": "main/index.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test tests/test-suite.test.js",
+    "seed": "node database/seed.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win nsis"
+  },
+  "keywords": [
+    "pharmacy",
+    "erp",
+    "billing",
+    "inventory",
+    "pos",
+    "marg",
+    "sqlite",
+    "electron"
+  ],
+  "author": "MediStock Systems",
+  "license": "Proprietary",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^13.0.3",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "electron": "^45.0.0",
+    "electron-builder": "^26.7.0"
+  },
+  "build": {
+    "appId": "com.medistock.erp",
+    "productName": "MediStock ERP",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MediStock ERP"
+    },
+    "files": [
+      "main/**/*",
+      "renderer/**/*",
+      "database/**/*",
+      "services/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "**/better-sqlite3/**"
+    ]
+  }
+}

@@ -1,0 +1,767 @@
+// renderer/js/views/billing.js
+// High-Speed Keyboard-Driven Retail Pharmacy POS Billing Engine
+
+window.MediStockViews = window.MediStockViews || {};
+
+window.MediStockViews.billing = {
+  // Current draft bill state
+  bill: {
+    customer: { id: null, name: 'Counter Cash / Walk-in Customer', phone: '' },
+    doctorName: '',
+    doctorRegNo: '',
+    paymentMode: 'CASH',
+    invoiceDiscountPercent: 0,
+    invoiceDiscountAmount: 0,
+    notes: '',
+    items: [],
+  },
+
+  heldBills: [],
+
+  render(container) {
+    this.renderLayout(container);
+    this.bindEvents(container);
+    this.updateTotals();
+
+    // Auto focus search input on view load
+    setTimeout(() => {
+      const searchInput = document.getElementById('pos-search-input');
+      if (searchInput) searchInput.focus();
+    }, 100);
+  },
+
+  renderLayout(container) {
+    container.innerHTML = `
+      <div class="billing-layout">
+        <!-- Billing Header Bar -->
+        <div class="billing-header-card">
+          <div class="billing-header-fields">
+            <div class="billing-field-pill" style="cursor: pointer;" id="btn-select-customer" title="Click or Press F3 to change customer">
+              <strong>Customer (F3):</strong>
+              <span id="pos-customer-label">${this.bill.customer.name}</span>
+            </div>
+
+            <div class="billing-field-pill">
+              <strong>Doctor:</strong>
+              <input type="text" id="pos-doctor-name" placeholder="Dr. Name (Optional)" value="${this.bill.doctorName}"
+                     style="border: none; background: transparent; font-size: 11.5px; font-weight: 600; outline: none; width: 140px;">
+            </div>
+
+            <div class="billing-field-pill">
+              <strong>Reg No:</strong>
+              <input type="text" id="pos-doctor-reg" placeholder="MCI Reg No" value="${this.bill.doctorRegNo}"
+                     style="border: none; background: transparent; font-size: 11.5px; font-weight: 600; outline: none; width: 90px;">
+            </div>
+
+            <div class="billing-field-pill">
+              <strong>Pay Mode:</strong>
+              <select id="pos-payment-mode" style="border: none; background: transparent; font-size: 11.5px; font-weight: 700; outline: none; cursor: pointer;">
+                <option value="CASH" ${this.bill.paymentMode === 'CASH' ? 'selected' : ''}>Cash</option>
+                <option value="UPI" ${this.bill.paymentMode === 'UPI' ? 'selected' : ''}>UPI / QR</option>
+                <option value="CARD" ${this.bill.paymentMode === 'CARD' ? 'selected' : ''}>Debit/Credit Card</option>
+                <option value="BANK_TRANSFER" ${this.bill.paymentMode === 'BANK_TRANSFER' ? 'selected' : ''}>Bank Transfer</option>
+                <option value="CREDIT" ${this.bill.paymentMode === 'CREDIT' ? 'selected' : ''}>Customer Credit (Udhar)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-outline btn-sm" id="btn-hold-bill" title="Hold bill in memory (F8)">Hold (F8)</button>
+            <button class="btn btn-outline btn-sm" id="btn-resume-bill" title="Resume held bill (F9)">Resume (F9) <span id="held-count-badge" class="badge info">${this.heldBills.length}</span></button>
+            <button class="btn btn-secondary btn-sm" id="btn-clear-bill" title="Clear current bill">Clear</button>
+          </div>
+        </div>
+
+        <!-- Medicine Search Input -->
+        <div class="billing-search-row">
+          <div class="search-input-wrapper">
+            <input type="text" id="pos-search-input" class="billing-search-input"
+                   placeholder="Type Medicine Brand Name, Salt, Generic, or Scan Barcode (F2)..." autocomplete="off">
+            <div class="search-barcode-icon">
+              <span>SCAN / SEARCH</span>
+            </div>
+            <div id="pos-search-results" class="search-results-dropdown" style="display: none;"></div>
+          </div>
+        </div>
+
+        <!-- Billing Items Grid -->
+        <div class="billing-grid-container">
+          <table class="billing-table">
+            <thead>
+              <tr>
+                <th style="width: 35px;">#</th>
+                <th>Medicine Description</th>
+                <th style="width: 100px;">Batch</th>
+                <th style="width: 75px;">Expiry</th>
+                <th style="width: 70px;">Unit</th>
+                <th style="width: 75px;" class="text-right">Qty</th>
+                <th style="width: 80px;" class="text-right">MRP</th>
+                <th style="width: 80px;" class="text-right">Rate</th>
+                <th style="width: 70px;" class="text-right">Disc %</th>
+                <th style="width: 85px;" class="text-right">Taxable</th>
+                <th style="width: 60px;" class="text-center">GST</th>
+                <th style="width: 95px;" class="text-right">Line Total</th>
+                <th style="width: 40px;" class="text-center">Del</th>
+              </tr>
+            </thead>
+            <tbody id="pos-items-tbody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Billing Footer / Totals -->
+        <div class="billing-footer">
+          <div class="billing-summary-pills">
+            <div class="summary-pill">
+              <span class="summary-pill-label">Total Items</span>
+              <span class="summary-pill-val" id="val-total-items">0</span>
+            </div>
+            <div class="summary-pill">
+              <span class="summary-pill-label">Total Qty</span>
+              <span class="summary-pill-val" id="val-total-qty">0</span>
+            </div>
+            <div class="summary-pill">
+              <span class="summary-pill-label">Subtotal</span>
+              <span class="summary-pill-val" id="val-subtotal">₹ 0.00</span>
+            </div>
+            <div class="summary-pill">
+              <span class="summary-pill-label">Discount</span>
+              <span class="summary-pill-val" id="val-discount" style="color: #16a34a;">₹ 0.00</span>
+            </div>
+            <div class="summary-pill">
+              <span class="summary-pill-label">Taxable</span>
+              <span class="summary-pill-val" id="val-taxable">₹ 0.00</span>
+            </div>
+            <div class="summary-pill">
+              <span class="summary-pill-label">CGST + SGST</span>
+              <span class="summary-pill-val" id="val-tax">₹ 0.00</span>
+            </div>
+            <div class="summary-pill">
+              <span class="summary-pill-label">Round-Off</span>
+              <span class="summary-pill-val" id="val-roundoff">₹ 0.00</span>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div class="billing-grand-total-box">
+              <div class="grand-total-label">Grand Total</div>
+              <div class="grand-total-val" id="val-grand-total">₹ 0.00</div>
+            </div>
+
+            <div class="billing-actions">
+              <button class="btn btn-success btn-lg" id="btn-save-print" title="Save & Print Bill (F12)">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                Save & Print (F12)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shortcuts Quick Bar -->
+        <div class="shortcuts-bar">
+          <div class="shortcut-chip"><kbd>F2</kbd> Search Medicine</div>
+          <div class="shortcut-chip"><kbd>F3</kbd> Select Customer</div>
+          <div class="shortcut-chip"><kbd>F8</kbd> Hold Bill</div>
+          <div class="shortcut-chip"><kbd>F9</kbd> Resume Bill</div>
+          <div class="shortcut-chip"><kbd>F12</kbd> Save & Print</div>
+          <div class="shortcut-chip"><kbd>Esc</kbd> Clear Search / Close Modal</div>
+        </div>
+      </div>
+    `;
+  },
+
+  bindEvents(container) {
+    const searchInput = document.getElementById('pos-search-input');
+    const searchResults = document.getElementById('pos-search-results');
+    const doctorInput = document.getElementById('pos-doctor-name');
+    const regInput = document.getElementById('pos-doctor-reg');
+    const paySelect = document.getElementById('pos-payment-mode');
+
+    doctorInput.addEventListener('input', (e) => { this.bill.doctorName = e.target.value; });
+    regInput.addEventListener('input', (e) => { this.bill.doctorRegNo = e.target.value; });
+    paySelect.addEventListener('change', (e) => { this.bill.paymentMode = e.target.value; });
+
+    document.getElementById('btn-select-customer').addEventListener('click', () => this.openCustomerModal());
+    document.getElementById('btn-hold-bill').addEventListener('click', () => this.holdCurrentBill());
+    document.getElementById('btn-resume-bill').addEventListener('click', () => this.resumeHeldBill());
+    document.getElementById('btn-clear-bill').addEventListener('click', () => this.clearBill());
+    document.getElementById('btn-save-print').addEventListener('click', () => this.saveAndPrintInvoice());
+
+    // Search input handler with debounce
+    let searchTimeout = null;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      const q = e.target.value.trim();
+      if (!q) {
+        searchResults.style.display = 'none';
+        return;
+      }
+      searchTimeout = setTimeout(() => this.executeMedicineSearch(q), 150);
+    });
+
+    // Keyboard navigation in search input
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        searchResults.style.display = 'none';
+        searchInput.value = '';
+      } else if (e.key === 'Enter') {
+        // If exact match or first result exists
+        const firstItem = searchResults.querySelector('.search-result-item');
+        if (firstItem) {
+          firstItem.click();
+        }
+      }
+    });
+
+    // Close search on click outside
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+        searchResults.style.display = 'none';
+      }
+    });
+  },
+
+  async executeMedicineSearch(query) {
+    const searchResults = document.getElementById('pos-search-results');
+    try {
+      const results = await window.api.medicines.search(query, { activeOnly: true, limit: 12 });
+      if (!results || results.length === 0) {
+        searchResults.innerHTML = `<div style="padding: 12px; color: var(--text-muted); text-align: center;">No medicine found for "${query}"</div>`;
+        searchResults.style.display = 'block';
+        return;
+      }
+
+      searchResults.innerHTML = results
+        .map(
+          (m, idx) => `
+        <div class="search-result-item ${idx === 0 ? 'selected' : ''}" data-id="${m.id}">
+          <div class="s-item-main">
+            <div class="s-item-brand">
+              ${m.brand_name}
+              ${m.schedule_type !== 'NONE' ? `<span class="badge purple" style="font-size: 9.5px;">${m.schedule_type}</span>` : ''}
+              ${m.rack_shelf ? `<span class="badge neutral" style="font-size: 9.5px;">Rack: ${m.rack_shelf}</span>` : ''}
+            </div>
+            <div class="s-item-generic">${m.generic_name || m.salt_name || ''}</div>
+            <div class="s-item-mfg">${m.manufacturer_name || ''} | Pack: 1 ${m.sale_unit} (${m.conversion_ratio} tabs)</div>
+          </div>
+          <div class="s-item-pricing">
+            <span class="s-item-rate">${MediStock.formatRupees(m.selling_price)}</span>
+            <span class="s-item-mrp">MRP ${MediStock.formatRupees(m.mrp)}</span>
+            <span class="s-item-stock ${m.total_stock > 10 ? 'badge success' : m.total_stock > 0 ? 'badge warning' : 'badge danger'}">
+              Stock: ${m.total_stock} ${m.sale_unit}s
+            </span>
+          </div>
+        </div>
+      `
+        )
+        .join('');
+
+      searchResults.style.display = 'block';
+
+      // Bind click handlers to items
+      searchResults.querySelectorAll('.search-result-item').forEach((elem) => {
+        elem.addEventListener('click', () => {
+          const prodId = Number(elem.getAttribute('data-id'));
+          this.selectProductForBilling(prodId);
+          searchResults.style.display = 'none';
+          const searchInput = document.getElementById('pos-search-input');
+          if (searchInput) searchInput.value = '';
+        });
+      });
+    } catch (err) {
+      console.error('Search error:', err);
+    }
+  },
+
+  async selectProductForBilling(productId) {
+    try {
+      const product = await window.api.medicines.getById(productId);
+      if (!product) return;
+
+      // Fetch non-expired batches for this product (sorted by FEFO)
+      const batches = await window.api.inventory.getBatches(productId, false);
+
+      if (!batches || batches.length === 0) {
+        MediStock.toast(`No active stock/batches available for "${product.brand_name}"`, 'warning');
+        return;
+      }
+
+      // If only 1 batch, add directly. If multiple batches, prompt selection
+      if (batches.length === 1) {
+        this.addBatchToGrid(product, batches[0]);
+      } else {
+        this.promptBatchSelectionModal(product, batches);
+      }
+    } catch (err) {
+      MediStock.toast(`Error selecting product: ${err.message}`, 'error');
+    }
+  },
+
+  promptBatchSelectionModal(product, batches) {
+    const bodyHtml = `
+      <div>
+        <p style="margin-bottom: 10px; font-weight: 600; font-size: 13px;">
+          Select Batch for <strong>${product.brand_name}</strong> (Sorted by FEFO):
+        </p>
+        <table class="batch-select-table">
+          <thead>
+            <tr>
+              <th>Batch No</th>
+              <th>Expiry</th>
+              <th>Days Left</th>
+              <th>MRP</th>
+              <th>Selling Rate</th>
+              <th>Available Qty</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${batches
+              .map(
+                (b) => `
+              <tr class="batch-row" data-batch-id="${b.id}">
+                <td><strong>${b.batch_number}</strong></td>
+                <td>${b.expiry_date}</td>
+                <td><span class="badge ${b.days_to_expiry <= 60 ? 'warning' : 'success'}">${Math.round(b.days_to_expiry)}d</span></td>
+                <td>${MediStock.formatRupees(b.mrp)}</td>
+                <td><strong>${MediStock.formatRupees(b.selling_price)}</strong></td>
+                <td><span class="badge info">${b.available_qty} ${product.sale_unit}</span></td>
+                <td><button class="btn btn-primary btn-sm btn-pick-batch" data-batch-id="${b.id}">Select</button></td>
+              </tr>
+            `
+              )
+              .join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    MediStock.showModal('FEFO Batch Selection', bodyHtml, '', 'lg');
+
+    document.querySelectorAll('.btn-pick-batch, .batch-row').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        const bId = Number(el.getAttribute('data-batch-id') || el.closest('.batch-row').getAttribute('data-batch-id'));
+        const chosen = batches.find((x) => x.id === bId);
+        if (chosen) {
+          MediStock.closeModal();
+          this.addBatchToGrid(product, chosen);
+        }
+      });
+    });
+  },
+
+  addBatchToGrid(product, batch) {
+    // Check if product & batch already in grid
+    const existingIndex = this.bill.items.findIndex((x) => x.batchId === batch.id);
+    if (existingIndex >= 0) {
+      // Increment quantity
+      if (this.bill.items[existingIndex].quantity + 1 <= batch.available_qty) {
+        this.bill.items[existingIndex].quantity += 1;
+        MediStock.toast(`Incremented quantity for ${product.brand_name}`, 'info');
+      } else {
+        MediStock.toast(`Cannot exceed available batch stock (${batch.available_qty})`, 'warning');
+      }
+    } else {
+      // Add new line item
+      this.bill.items.push({
+        productId: product.id,
+        brandName: product.brand_name,
+        scheduleType: product.schedule_type,
+        batchId: batch.id,
+        batchNumber: batch.batch_number,
+        expiryDate: batch.expiry_date,
+        unit: product.sale_unit || 'Strip',
+        availableQty: batch.available_qty,
+        quantity: 1,
+        mrp: batch.mrp,
+        sellingRate: batch.selling_price,
+        discountPercent: 0,
+        taxRate: product.tax_rate || 1200,
+      });
+
+      // If item is Schedule H / H1, remind operator to note Doctor details
+      if (product.schedule_type === 'SCHEDULE_H' || product.schedule_type === 'SCHEDULE_H1') {
+        MediStock.toast(`Notice: "${product.brand_name}" is ${product.schedule_type}. Doctor details recorded for statutory register.`, 'warning');
+        const docInput = document.getElementById('pos-doctor-name');
+        if (docInput && !docInput.value) docInput.focus();
+      }
+    }
+
+    this.renderItemsTable();
+    this.updateTotals();
+  },
+
+  renderItemsTable() {
+    const tbody = document.getElementById('pos-items-tbody');
+    if (!tbody) return;
+
+    if (this.bill.items.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="13" class="text-center" style="padding: 36px; color: var(--text-muted);">
+            No medicines added yet. Type medicine name or scan barcode above to start bill!
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = this.bill.items
+      .map((it, idx) => {
+        // Calculate line values in UI
+        const calc = this.calculateLineLocally(it);
+
+        return `
+        <tr data-index="${idx}">
+          <td class="text-center">${idx + 1}</td>
+          <td>
+            <strong>${it.brandName}</strong>
+            ${it.scheduleType !== 'NONE' ? `<span class="badge purple" style="font-size: 9px; margin-left: 4px;">${it.scheduleType}</span>` : ''}
+          </td>
+          <td><span class="font-mono">${it.batchNumber}</span></td>
+          <td style="font-size: 11px;">${it.expiryDate}</td>
+          <td><span class="badge neutral">${it.unit}</span></td>
+          <td class="text-right">
+            <input type="number" min="0.1" step="any" max="${it.availableQty}" value="${it.quantity}"
+                   class="grid-qty-input pos-item-qty" data-index="${idx}">
+          </td>
+          <td class="text-right font-mono" style="color: var(--text-muted);">${MediStock.formatRupees(it.mrp)}</td>
+          <td class="text-right">
+            <input type="number" value="${(it.sellingRate / 100).toFixed(2)}" step="0.5"
+                   class="grid-rate-input pos-item-rate" data-index="${idx}">
+          </td>
+          <td class="text-right">
+            <input type="number" min="0" max="100" value="${it.discountPercent}"
+                   class="grid-disc-input pos-item-disc" data-index="${idx}">
+          </td>
+          <td class="text-right font-mono">${MediStock.formatRupees(calc.taxable)}</td>
+          <td class="text-center font-mono">${(it.taxRate / 100).toFixed(0)}%</td>
+          <td class="text-right font-mono" style="font-weight: 700; color: #0284c7;">${MediStock.formatRupees(calc.lineTotal)}</td>
+          <td class="text-center">
+            <button class="btn-delete-row" data-index="${idx}" title="Remove Item">&times;</button>
+          </td>
+        </tr>
+      `;
+      })
+      .join('');
+
+    // Attach row events
+    tbody.querySelectorAll('.pos-item-qty').forEach((inp) => {
+      inp.addEventListener('change', (e) => {
+        const idx = Number(e.target.getAttribute('data-index'));
+        const val = Number(e.target.value);
+        if (val <= 0) {
+          this.bill.items.splice(idx, 1);
+        } else if (val > this.bill.items[idx].availableQty) {
+          MediStock.toast(`Quantity exceeds batch stock (${this.bill.items[idx].availableQty})`, 'warning');
+          e.target.value = this.bill.items[idx].availableQty;
+          this.bill.items[idx].quantity = this.bill.items[idx].availableQty;
+        } else {
+          this.bill.items[idx].quantity = val;
+        }
+        this.renderItemsTable();
+        this.updateTotals();
+      });
+    });
+
+    tbody.querySelectorAll('.pos-item-rate').forEach((inp) => {
+      inp.addEventListener('change', (e) => {
+        const idx = Number(e.target.getAttribute('data-index'));
+        const val = Math.round(Number(e.target.value) * 100);
+        this.bill.items[idx].sellingRate = val;
+        this.renderItemsTable();
+        this.updateTotals();
+      });
+    });
+
+    tbody.querySelectorAll('.pos-item-disc').forEach((inp) => {
+      inp.addEventListener('change', (e) => {
+        const idx = Number(e.target.getAttribute('data-index'));
+        const val = Math.max(0, Math.min(100, Number(e.target.value)));
+        this.bill.items[idx].discountPercent = val;
+        this.renderItemsTable();
+        this.updateTotals();
+      });
+    });
+
+    tbody.querySelectorAll('.btn-delete-row').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const idx = Number(btn.getAttribute('data-index'));
+        this.bill.items.splice(idx, 1);
+        this.renderItemsTable();
+        this.updateTotals();
+      });
+    });
+  },
+
+  calculateLineLocally(item) {
+    const qty = Number(item.quantity) || 0;
+    const rate = Number(item.sellingRate) || 0;
+    const disc = Number(item.discountPercent) || 0;
+    const taxRate = Number(item.taxRate) || 1200;
+
+    const gross = Math.round(qty * rate);
+    const lineDiscount = Math.round((gross * disc) / 100);
+    const taxable = Math.max(0, gross - lineDiscount);
+    const halfTax = taxRate / 2;
+    const cgst = Math.round((taxable * halfTax) / 10000);
+    const sgst = Math.round((taxable * halfTax) / 10000);
+    const lineTotal = taxable + cgst + sgst;
+
+    return { gross, lineDiscount, taxable, cgst, sgst, totalTax: cgst + sgst, lineTotal };
+  },
+
+  updateTotals() {
+    let totalItems = this.bill.items.length;
+    let totalQty = 0;
+    let subtotal = 0;
+    let discount = 0;
+    let taxable = 0;
+    let tax = 0;
+
+    for (const it of this.bill.items) {
+      const c = this.calculateLineLocally(it);
+      totalQty += Number(it.quantity) || 0;
+      subtotal += c.gross;
+      discount += c.lineDiscount;
+      taxable += c.taxable;
+      tax += c.totalTax;
+    }
+
+    const unrounded = taxable + tax;
+    const grandTotal = Math.round(unrounded / 100) * 100;
+    const roundoff = grandTotal - unrounded;
+
+    document.getElementById('val-total-items').textContent = totalItems;
+    document.getElementById('val-total-qty').textContent = totalQty;
+    document.getElementById('val-subtotal').textContent = MediStock.formatRupees(subtotal);
+    document.getElementById('val-discount').textContent = MediStock.formatRupees(discount);
+    document.getElementById('val-taxable').textContent = MediStock.formatRupees(taxable);
+    document.getElementById('val-tax').textContent = MediStock.formatRupees(tax);
+    document.getElementById('val-roundoff').textContent = MediStock.formatRupees(roundoff);
+    document.getElementById('val-grand-total').textContent = MediStock.formatRupees(grandTotal);
+
+    this.bill.computed = { totalItems, totalQty, subtotal, discount, taxable, tax, roundoff, grandTotal };
+  },
+
+  async saveAndPrintInvoice() {
+    if (this.bill.items.length === 0) {
+      MediStock.toast('Cannot save empty invoice! Please add medicines first.', 'warning');
+      return;
+    }
+
+    try {
+      const payload = {
+        invoiceType: 'RETAIL',
+        customerId: this.bill.customer.id,
+        customerName: this.bill.customer.name,
+        customerPhone: this.bill.customer.phone,
+        doctorName: this.bill.doctorName,
+        doctorRegNo: this.bill.doctorRegNo,
+        paymentMode: this.bill.paymentMode,
+        items: this.bill.items,
+        invoiceDiscountPercent: this.bill.invoiceDiscountPercent,
+        invoiceDiscountAmount: this.bill.invoiceDiscountAmount,
+        notes: this.bill.notes,
+        userId: MediStock.currentUser ? MediStock.currentUser.id : null,
+      };
+
+      const result = await window.api.sales.createInvoice(payload);
+
+      if (result.success) {
+        MediStock.toast(`Invoice ${result.invoiceNumber} posted successfully! Total: ${MediStock.formatRupees(result.grandTotal)}`, 'success');
+
+        // Open Print Preview Modal with 80mm Thermal & A4 options
+        this.openPrintPreviewModal(result.invoiceId);
+
+        // Reset Bill
+        this.clearBill();
+      }
+    } catch (err) {
+      MediStock.toast(`Billing Failed: ${err.message}`, 'error');
+    }
+  },
+
+  async openPrintPreviewModal(invoiceId) {
+    const inv = await window.api.sales.getInvoice(invoiceId);
+    if (!inv) return;
+
+    const company = inv.company || {};
+
+    const bodyHtml = `
+      <div style="display: flex; gap: 16px;">
+        <!-- Left: Print preview panel (80mm receipt style) -->
+        <div style="flex: 1; background: #fff; border: 1px solid #ccc; padding: 14px; font-family: monospace; font-size: 11px; max-height: 500px; overflow-y: auto;">
+          <div style="text-align: center; border-bottom: 1px dashed #666; padding-bottom: 6px; margin-bottom: 6px;">
+            <div style="font-size: 14px; font-weight: bold;">${company.trade_name || company.name || 'APEX PHARMACY'}</div>
+            <div>${company.address_line1 || ''}, ${company.city || ''}</div>
+            <div>Phone: ${company.phone || ''}</div>
+            <div>DL: ${company.drug_license_no_1 || ''} | GSTIN: ${company.gstin || ''}</div>
+          </div>
+
+          <div style="border-bottom: 1px dashed #666; padding-bottom: 4px; margin-bottom: 4px; font-size: 10.5px;">
+            <div><strong>Bill No:</strong> ${inv.invoice_number} | <strong>Date:</strong> ${inv.invoice_date}</div>
+            <div><strong>Customer:</strong> ${inv.customer_name} ${inv.customer_phone ? '(' + inv.customer_phone + ')' : ''}</div>
+            ${inv.doctor_name ? `<div><strong>Doctor:</strong> ${inv.doctor_name} ${inv.doctor_reg_no ? '[' + inv.doctor_reg_no + ']' : ''}</div>` : ''}
+            <div><strong>Mode:</strong> ${inv.payment_mode}</div>
+          </div>
+
+          <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 6px;">
+            <thead>
+              <tr style="border-bottom: 1px solid #000;">
+                <th style="text-align: left;">Item</th>
+                <th>Batch</th>
+                <th>Exp</th>
+                <th style="text-align: right;">Qty</th>
+                <th style="text-align: right;">Rate</th>
+                <th style="text-align: right;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${inv.items
+                .map(
+                  (it) => `
+                <tr>
+                  <td>${it.brand_name}</td>
+                  <td style="text-align: center;">${it.batch_number}</td>
+                  <td style="text-align: center;">${it.expiry_date.slice(2, 7)}</td>
+                  <td style="text-align: right;">${it.quantity}</td>
+                  <td style="text-align: right;">${(it.selling_rate / 100).toFixed(2)}</td>
+                  <td style="text-align: right;">${(it.line_total / 100).toFixed(2)}</td>
+                </tr>
+              `
+                )
+                .join('')}
+            </tbody>
+          </table>
+
+          <div style="border-top: 1px dashed #666; padding-top: 4px; font-size: 11px;">
+            <div style="display: flex; justify-content: space-between;"><span>Subtotal:</span><span>${MediStock.formatRupees(inv.subtotal)}</span></div>
+            <div style="display: flex; justify-content: space-between;"><span>Total Tax (CGST+SGST):</span><span>${MediStock.formatRupees(inv.total_tax)}</span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-top: 4px;">
+              <span>Grand Total:</span><span>${MediStock.formatRupees(inv.grand_total)}</span>
+            </div>
+          </div>
+
+          <div style="text-align: center; margin-top: 12px; font-size: 10px; border-top: 1px dashed #666; padding-top: 6px;">
+            <div>* GET WELL SOON *</div>
+            <div style="margin-top: 4px;">Thank you for your visit! Pharmacist Signature: ______________</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const footerHtml = `
+      <button class="btn btn-primary" onclick="window.print()">Print Receipt (80mm / A4)</button>
+      <button class="btn btn-secondary" onclick="MediStock.closeModal()">Close</button>
+    `;
+
+    MediStock.showModal(`Invoice Preview — ${inv.invoice_number}`, bodyHtml, footerHtml, 'lg');
+  },
+
+  openCustomerModal() {
+    const bodyHtml = `
+      <div>
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <input type="text" id="cust-search-input" class="form-control" placeholder="Search Customer Name or Phone..." autofocus>
+          <button class="btn btn-primary" id="btn-create-fast-cust">+ New Customer</button>
+        </div>
+        <div id="cust-list-container" style="max-height: 280px; overflow-y: auto;">
+          <p>Loading customers...</p>
+        </div>
+      </div>
+    `;
+
+    MediStock.showModal('Select Customer (F3)', bodyHtml, '', 'md');
+
+    const searchInput = document.getElementById('cust-search-input');
+    const listContainer = document.getElementById('cust-list-container');
+
+    const loadList = async (q = '') => {
+      const customers = await window.api.parties.listCustomers(q);
+      listContainer.innerHTML = customers
+        .map(
+          (c) => `
+        <div class="card" style="padding: 8px 12px; margin-bottom: 6px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;"
+             onclick="window.MediStockViews.billing.setCustomer(${c.id}, '${c.name.replace(/'/g, "\\'")}', '${c.phone || ''}')">
+          <div>
+            <strong>${c.name}</strong>
+            <div style="font-size: 11px; color: var(--text-muted);">${c.phone || 'No phone'} | Balance: ${MediStock.formatRupees(c.current_balance)}</div>
+          </div>
+          <button class="btn btn-outline btn-sm">Select</button>
+        </div>
+      `
+        )
+        .join('');
+    };
+
+    loadList();
+
+    searchInput.addEventListener('input', (e) => loadList(e.target.value));
+
+    document.getElementById('btn-create-fast-cust').addEventListener('click', () => {
+      const name = prompt('Enter Customer Full Name:');
+      if (!name) return;
+      const phone = prompt('Enter Customer Phone Number:');
+      window.api.parties.saveCustomer({ name, phone }).then((res) => {
+        this.setCustomer(res.id, name, phone);
+        MediStock.closeModal();
+      });
+    });
+  },
+
+  setCustomer(id, name, phone) {
+    this.bill.customer = { id, name, phone };
+    const label = document.getElementById('pos-customer-label');
+    if (label) label.textContent = name;
+    MediStock.closeModal();
+    MediStock.toast(`Customer set to "${name}"`, 'info');
+  },
+
+  holdCurrentBill() {
+    if (this.bill.items.length === 0) {
+      MediStock.toast('No items in bill to hold', 'warning');
+      return;
+    }
+    this.heldBills.push(JSON.parse(JSON.stringify(this.bill)));
+    this.clearBill();
+    document.getElementById('held-count-badge').textContent = this.heldBills.length;
+    MediStock.toast(`Bill held successfully (${this.heldBills.length} held)`, 'info');
+  },
+
+  resumeHeldBill() {
+    if (this.heldBills.length === 0) {
+      MediStock.toast('No held bills in memory', 'warning');
+      return;
+    }
+    this.bill = this.heldBills.pop();
+    document.getElementById('held-count-badge').textContent = this.heldBills.length;
+    this.renderItemsTable();
+    this.updateTotals();
+    const custLabel = document.getElementById('pos-customer-label');
+    if (custLabel) custLabel.textContent = this.bill.customer.name;
+    MediStock.toast('Held bill restored', 'success');
+  },
+
+  clearBill() {
+    this.bill = {
+      customer: { id: null, name: 'Counter Cash / Walk-in Customer', phone: '' },
+      doctorName: '',
+      doctorRegNo: '',
+      paymentMode: 'CASH',
+      invoiceDiscountPercent: 0,
+      invoiceDiscountAmount: 0,
+      notes: '',
+      items: [],
+    };
+    const custLabel = document.getElementById('pos-customer-label');
+    if (custLabel) custLabel.textContent = this.bill.customer.name;
+    const docInput = document.getElementById('pos-doctor-name');
+    if (docInput) docInput.value = '';
+    const regInput = document.getElementById('pos-doctor-reg');
+    if (regInput) regInput.value = '';
+    this.renderItemsTable();
+    this.updateTotals();
+  },
+};

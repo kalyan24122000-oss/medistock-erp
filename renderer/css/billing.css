@@ -1,0 +1,383 @@
+/* renderer/css/billing.css - POS High-Speed Pharmacy Billing Grid & Ergonomics */
+
+.billing-layout {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 80px);
+  gap: 10px;
+}
+
+/* Header Bar */
+.billing-header-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  box-shadow: var(--shadow-sm);
+}
+
+.billing-header-fields {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.billing-field-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-size: 11.5px;
+}
+
+.billing-field-pill strong {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.billing-field-pill span {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* Search Bar Area */
+.billing-search-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  position: relative;
+}
+
+.search-input-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.billing-search-input {
+  width: 100%;
+  height: 42px;
+  font-size: 14.5px;
+  font-weight: 600;
+  padding: 0 42px 0 14px;
+  border: 2px solid var(--primary);
+  border-radius: var(--radius);
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.15);
+}
+
+.billing-search-input:focus {
+  outline: none;
+  border-color: #0369a1;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25);
+}
+
+.search-barcode-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  background-color: #f1f5f9;
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+
+/* Auto-Suggest Dropdown Results */
+.search-results-dropdown {
+  position: absolute;
+  top: 46px;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  max-height: 380px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.search-result-item {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.1s;
+}
+
+.search-result-item:hover,
+.search-result-item.selected {
+  background-color: #e0f2fe;
+}
+
+.s-item-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.s-item-brand {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.s-item-generic {
+  font-size: 11.5px;
+  color: #475569;
+}
+
+.s-item-mfg {
+  font-size: 11px;
+  color: var(--text-light);
+}
+
+.s-item-pricing {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.s-item-rate {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0369a1;
+  font-family: var(--font-mono);
+}
+
+.s-item-mrp {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.s-item-stock {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Bill Grid */
+.billing-grid-container {
+  flex: 1;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.billing-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.billing-table th {
+  background-color: #0f172a;
+  color: #f8fafc;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.billing-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.billing-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.grid-qty-input,
+.grid-disc-input,
+.grid-rate-input {
+  width: 65px;
+  padding: 4px 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-align: right;
+  font-family: var(--font-mono);
+}
+
+.grid-qty-input:focus,
+.grid-disc-input:focus,
+.grid-rate-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background-color: #f0fdf4;
+}
+
+.btn-delete-row {
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.btn-delete-row:hover {
+  background-color: #fee2e2;
+}
+
+/* Footer Totals Section */
+.billing-footer {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.billing-summary-pills {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.summary-pill {
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-pill-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.summary-pill-val {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  font-family: var(--font-mono);
+}
+
+.billing-grand-total-box {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: var(--radius);
+  text-align: right;
+  box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.3);
+}
+
+.grand-total-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.9;
+}
+
+.grand-total-val {
+  font-size: 24px;
+  font-weight: 900;
+  font-family: var(--font-mono);
+  line-height: 1.1;
+}
+
+.billing-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Shortcuts Hint Bar */
+.shortcuts-bar {
+  background-color: #0f172a;
+  color: #94a3b8;
+  padding: 5px 12px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.shortcut-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.shortcut-chip kbd {
+  background-color: #334155;
+  color: #f1f5f9;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  border: 1px solid #475569;
+}
+
+/* Batch Selection Modal Table */
+.batch-select-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.batch-select-table th {
+  background: #f1f5f9;
+  padding: 8px;
+  text-align: left;
+  font-weight: 700;
+  color: #334155;
+  border-bottom: 2px solid var(--border);
+}
+
+.batch-select-table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.batch-row {
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.batch-row:hover {
+  background-color: #e0f2fe;
+}
