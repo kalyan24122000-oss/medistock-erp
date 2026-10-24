@@ -1,27 +1,6 @@
 // renderer/js/app.js
 // Central MediStock ERP Application Controller, Router, Modal Manager & Keyboard Shortcuts
 
-const VIEW_SCRIPTS = [
-  'js/views/dashboard.js',
-  'js/views/billing.js',
-  'js/views/wholesale.js',
-  'js/views/sales.js',
-  'js/views/purchase.js',
-  'js/views/inventory.js',
-  'js/views/expiry.js',
-  'js/views/compliance.js',
-  'js/views/masters.js',
-  'js/views/customers.js',
-  'js/views/suppliers.js',
-  'js/views/accounts.js',
-  'js/views/gst.js',
-  'js/views/reports.js',
-  'js/views/backup.js',
-  'js/views/users.js',
-  'js/views/settings.js',
-  'js/views/about.js',
-];
-
 window.MediStock = {
   currentUser: {
     id: 1,
@@ -237,35 +216,18 @@ window.MediStock = {
   },
 };
 
-// Dynamically load view scripts sequentially then initialize app
 async function bootstrapApp() {
-  window.MediStockViews = window.MediStockViews || {};
-
-  const loadScript = (src) =>
-    new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = src;
-      script.onload = resolve;
-      script.onerror = () => {
-        console.error(`Failed to load view script ${src}`);
-        resolve(); // Continue even if single script fails
-      };
-      document.body.appendChild(script);
-    });
-
-  for (const s of VIEW_SCRIPTS) {
-    await loadScript(s);
-  }
-
-  // Initialize features
+  console.log('MediStock bootstrapping UI...');
   MediStock.initClock();
   MediStock.bindGlobalShortcuts();
   MediStock.bindUiControls();
   await MediStock.initCompanyHeader();
-
-  // Navigate to initial dashboard view
-  MediStock.navigate('dashboard');
+  await MediStock.navigate('dashboard');
+  console.log('MediStock UI ready!');
 }
 
-// Start application when DOM is ready
-document.addEventListener('DOMContentLoaded', bootstrapApp);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bootstrapApp);
+} else {
+  bootstrapApp();
+}

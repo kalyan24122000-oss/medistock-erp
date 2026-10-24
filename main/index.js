@@ -31,6 +31,7 @@ function createWindow() {
     minWidth: 1100,
     minHeight: 700,
     title: 'MediStock ERP — Pharmacy Management System',
+    show: true,
     frame: true,
     backgroundColor: '#f8fafc',
     webPreferences: {
@@ -41,7 +42,18 @@ function createWindow() {
     },
   });
 
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    console.log(`[Renderer] ${message} (${sourceId}:${line})`);
+  });
+
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error(`[Renderer Load Failed] ${errorCode}: ${errorDescription}`);
+  });
+
   mainWindow.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
+
+  mainWindow.show();
+  mainWindow.focus();
 
   mainWindow.on('closed', () => {
     mainWindow = null;

@@ -1,0 +1,4 @@
+Product Code,Barcode,Brand Name,Generic Name,Salt Composition,Manufacturer,Category,HSN Code,Tax Rate (%),Purchase Unit,Sale Unit,Conversion Ratio,Purchase Rate (Rs),MRP (Rs),Selling Price (Rs),Reorder Level,Max Level,Rack Location,Schedule Type,Prescription Required (Y/N),Loose Sale Allowed (Y/N)
+MED001,890103000101,Paracetamol 650mg,Paracetamol,Paracetamol,Micro Labs Ltd,Analgesics & Antipyretics,30049060,12,Box,Strip,10,25,33.15,31.5,20,500,R1-S2,NONE,N,Y
+MED002,890103000102,Amoxicillin 500mg,Amoxicillin Trihydrate,Amoxicillin Trihydrate,Cipla Ltd,Antibiotics,30041010,12,Box,Strip,10,85,115,110,15,300,R2-S1,SCHEDULE_H,Y,N
+MED003,890103000103,Alprazolam 0.5mg,Alprazolam,Alprazolam,Torrent Pharmaceuticals,CNS Agents & Sedatives,30049099,12,Box,Strip,15,45,62,58,10,150,LOCK-A1,SCHEDULE_H1,Y,N

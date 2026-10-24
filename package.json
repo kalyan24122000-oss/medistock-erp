@@ -35,6 +35,7 @@
   "build": {
     "appId": "com.medistock.erp",
     "productName": "MediStock ERP",
+    "npmRebuild": false,
     "directories": {
       "output": "dist"
     },
