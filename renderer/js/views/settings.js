@@ -23,6 +23,7 @@ window.MediStockViews.settings = {
             <button class="btn btn-sm ${this.activeTab === 'backup' ? 'btn-primary' : 'btn-outline'}" data-tab="backup">💾 Backup & Restore</button>
             <button class="btn btn-sm ${this.activeTab === 'shortcuts' ? 'btn-primary' : 'btn-outline'}" data-tab="shortcuts">⌨️ Shortcuts & Help</button>
             <button class="btn btn-sm ${this.activeTab === 'tabs' ? 'btn-primary' : 'btn-outline'}" data-tab="tabs">📑 Active 15 Tabs</button>
+            <button class="btn btn-sm ${this.activeTab === 'license' ? 'btn-primary' : 'btn-outline'}" data-tab="license">🔑 License & Subscription</button>
           </div>
         </div>
       </div>
@@ -63,6 +64,8 @@ window.MediStockViews.settings = {
       }
     } else if (this.activeTab === 'tabs') {
       this.renderTabsGuide(subContainer);
+    } else if (this.activeTab === 'license') {
+      await this.renderLicenseTab(subContainer);
     }
   },
 
@@ -371,6 +374,163 @@ window.MediStockViews.settings = {
           }
         } catch (e) {
           MediStock.toast(`Cannot preview: ${e.message}`, 'error');
+        }
+      });
+    }
+  },
+
+  async renderLicenseTab(subContainer) {
+    let licStatus = { isLicensed: false };
+    let hwid = 'Loading...';
+    try {
+      licStatus = await window.api.license.getStatus();
+      hwid = await window.api.license.getHardwareId();
+    } catch (e) {
+      console.warn('Could not query license status:', e);
+    }
+
+    const isLicensed = licStatus && licStatus.isLicensed;
+    const lic = (licStatus && licStatus.license) || null;
+
+    subContainer.innerHTML = `
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🔑 Software License & Subscription Management</div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-outline btn-sm" id="btn-sync-license-server">🔄 Sync with Server</button>
+            <button class="btn btn-danger btn-sm" id="btn-deactivate-license">🔓 Deactivate / Change Key</button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-top: 10px;">
+          <div>
+            <!-- Current License Status Banner -->
+            <div style="background: ${isLicensed ? '#f0fdf4' : '#fef2f2'}; border: 1px solid ${isLicensed ? '#86efac' : '#fca5a5'}; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <span class="badge ${isLicensed ? 'success' : 'danger'}" style="font-size: 12px; padding: 4px 10px;">
+                    ${isLicensed ? '✅ LICENSE ACTIVE & VALID' : '⚠️ UNLICENSED / EXPIRED'}
+                  </span>
+                  <h3 style="font-size: 18px; font-weight: 800; margin: 8px 0 2px; color: ${isLicensed ? '#15803d' : '#b91c1c'};">
+                    ${lic ? lic.pharmacyName : (licStatus.pharmacyName || 'No Registered Pharmacy')}
+                  </h3>
+                  <div style="font-size: 12px; color: #64748b;">
+                    Plan: <strong>${lic ? lic.planCode : 'None'}</strong> • Multi-Branch Limit: <strong>${lic ? lic.maxBranches : 1} Branch</strong>
+                  </div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 28px; font-weight: 900; color: ${isLicensed ? '#16a34a' : '#dc2626'};">
+                    ${lic ? lic.remainingDays : 0}
+                  </div>
+                  <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b;">
+                    Days Remaining
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- License Details Grid -->
+            <div class="table-container">
+              <table class="data-table">
+                <tbody>
+                  <tr>
+                    <th style="width: 200px;">License Key</th>
+                    <td><code style="font-weight: 700; color: #0284c7; font-size: 13px;">${lic ? lic.key : (licStatus.licenseKey || 'N/A')}</code></td>
+                  </tr>
+                  <tr>
+                    <th>Issued Date</th>
+                    <td>${lic && lic.issuedAt ? lic.issuedAt.split('T')[0] : 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <th>Expiration Date</th>
+                    <td><strong>${lic && lic.expiresAt ? lic.expiresAt.split('T')[0] : (licStatus.expiresAt ? licStatus.expiresAt.split('T')[0] : 'N/A')}</strong></td>
+                  </tr>
+                  <tr>
+                    <th>Last Server Sync</th>
+                    <td>${lic && lic.lastVerifiedAt ? new Date(lic.lastVerifiedAt).toLocaleString('en-IN') : 'Initial Offline Activation'}</td>
+                  </tr>
+                  <tr>
+                    <th>Licensing Server</th>
+                    <td><code style="font-size: 11px;">${lic ? lic.serverUrl : 'http://localhost:5000'}</code></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div>
+            <!-- Machine Fingerprint Card -->
+            <div class="card" style="background: #f8fafc; border: 1px solid #e2e8f0; height: 100%;">
+              <h4 style="font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 8px;">🖥️ Machine Hardware ID (HWID)</h4>
+              <p style="font-size: 11.5px; color: #64748b; line-height: 1.4;">
+                This installation is cryptographically bound to this computer's CPU and network interface:
+              </p>
+              <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; margin: 10px 0; text-align: center;">
+                <code style="font-weight: 800; font-size: 13.5px; color: #0f172a; display: block;" id="settings-hwid-display">${hwid}</code>
+                <button class="btn btn-outline btn-sm" id="btn-settings-copy-hwid" style="margin-top: 8px; width: 100%;">
+                  📋 Copy Hardware ID
+                </button>
+              </div>
+              <div style="font-size: 11px; color: #64748b; margin-top: 10px;">
+                💡 To transfer this license to another computer, reset the bound HWID in the <strong>Admin Portal</strong> first.
+              </div>
+              <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #e2e8f0;">
+                <a href="http://localhost:5000/admin" target="_blank" class="btn btn-outline btn-sm" style="width: 100%; text-align: center; text-decoration: none; display: block;">
+                  🌐 Open Admin Portal (Port 5000)
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Copy HWID
+    const btnCopyHwid = subContainer.querySelector('#btn-settings-copy-hwid');
+    if (btnCopyHwid) {
+      btnCopyHwid.addEventListener('click', () => {
+        navigator.clipboard.writeText(hwid);
+        MediStock.toast('Hardware ID copied to clipboard!', 'success');
+      });
+    }
+
+    // Server Sync
+    const btnSync = subContainer.querySelector('#btn-sync-license-server');
+    if (btnSync) {
+      btnSync.addEventListener('click', async () => {
+        btnSync.disabled = true;
+        btnSync.textContent = '⏳ Syncing...';
+        try {
+          const res = await window.api.license.sync();
+          if (res.success) {
+            MediStock.toast('License synchronized with server successfully!', 'success');
+            await this.renderLicenseTab(subContainer);
+          } else {
+            MediStock.toast(`Sync failed: ${res.message}`, 'warning');
+            btnSync.disabled = false;
+            btnSync.textContent = '🔄 Sync with Server';
+          }
+        } catch (err) {
+          MediStock.toast(`Sync error: ${err.message}`, 'error');
+          btnSync.disabled = false;
+          btnSync.textContent = '🔄 Sync with Server';
+        }
+      });
+    }
+
+    // Deactivate / Change Key
+    const btnDeactivate = subContainer.querySelector('#btn-deactivate-license');
+    if (btnDeactivate) {
+      btnDeactivate.addEventListener('click', async () => {
+        const confirmed = window.confirm('Are you sure you want to deactivate the license on this machine? You will be prompted to enter a new license key to continue using MediStock.');
+        if (!confirmed) return;
+
+        try {
+          await window.api.license.deactivate();
+          MediStock.toast('License deactivated. Please enter a valid license key.', 'info');
+          MediStock.showLicenseScreen();
+        } catch (err) {
+          MediStock.toast(`Deactivation failed: ${err.message}`, 'error');
         }
       });
     }

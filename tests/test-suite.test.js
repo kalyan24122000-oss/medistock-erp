@@ -14,6 +14,9 @@ const { processSalesReturn } = require('../services/return-service');
 const { createJournalVoucher, getTrialBalance } = require('../services/accounting-service');
 const { getComplianceRegister } = require('../services/compliance-service');
 const { createBackup, previewBackup } = require('../services/backup-service');
+const { getMachineHardwareId, getLicenseStatus, deactivateLicenseLocal } = require('../services/license-service');
+const { generateLicenseKey, validateKeyFormat, signLicensePayload, verifyLicenseSignature } = require('../backend/license-generator');
+const { login: authenticateUser } = require('../services/auth-service');
 
 // Use a dedicated isolated test database
 const TEST_DB_PATH = path.join(__dirname, 'test_medistock.db');
@@ -465,5 +468,84 @@ test('13. POS Retail Invoice with Custom Loose Tablets & Journal Entry Verificat
   assert.equal(journal.total_amount, invRes.grandTotal, 'Journal total_amount must match invoice grand total');
   assert.ok(!isNaN(journal.total_amount), 'Journal total_amount must not be NaN');
 });
+
+test('14. Machine Hardware Fingerprint & Cryptographic License Verification', () => {
+  const db = getDatabase();
+
+  // 1. Hardware ID generation
+  const hwid1 = getMachineHardwareId();
+  const hwid2 = getMachineHardwareId();
+  assert.ok(hwid1.startsWith('HWID-'), 'HWID must start with HWID- prefix');
+  assert.equal(hwid1, hwid2, 'HWID must be stable across multiple calls');
+
+  // 2. Key format validation
+  assert.ok(validateKeyFormat('MEDI-APEX-2026-PRO9-8877'), 'Valid key format must pass');
+  assert.ok(!validateKeyFormat('INVALID-KEY'), 'Malformed key must be rejected');
+  assert.ok(!validateKeyFormat('medi-apex-2026-pro9-8877'), 'Lowercase key must be rejected');
+
+  // 3. Dynamic key generation
+  const generatedKey = generateLicenseKey('PRO');
+  assert.ok(generatedKey.startsWith('MEDI-'), 'Generated key must start with MEDI-');
+  assert.ok(validateKeyFormat(generatedKey), 'Generated key must satisfy format rules');
+
+  // 4. Cryptographic HMAC signature and verification
+  const payload = {
+    licenseKey: 'MEDI-TEST-2026-UNIT-9999',
+    hardwareId: hwid1,
+    planCode: 'PRO-1YR',
+    expiresAt: '2027-12-31T23:59:59Z',
+  };
+  const signed = signLicensePayload(payload);
+  assert.ok(signed.signature && signed.signature.length === 64, 'Signature must be a 64-char hex SHA256 HMAC');
+  assert.ok(verifyLicenseSignature(signed), 'Valid signed payload must verify successfully');
+
+  const tampered = { ...signed, planCode: 'ENTERPRISE-LIFETIME' };
+  assert.ok(!verifyLicenseSignature(tampered), 'Tampered payload must fail signature verification');
+
+  // 5. Local database storage and offline verification
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  db.prepare(`
+    INSERT OR REPLACE INTO app_licenses (
+      license_key, pharmacy_name, plan_code, hardware_id, max_branches,
+      status, issued_at, expires_at, signature
+    ) VALUES (?, ?, ?, ?, ?, 'ACTIVE', CURRENT_TIMESTAMP, ?, ?)
+  `).run('MEDI-TEST-2026-UNIT-9999', 'Apex Test Pharmacy', 'PRO-1YR', hwid1, 1, expiresAt, signed.signature);
+
+  const status = getLicenseStatus();
+  assert.ok(status.isLicensed, 'Local license must report active');
+  assert.equal(status.license.key, 'MEDI-TEST-2026-UNIT-9999', 'License key must match');
+  assert.equal(status.license.planCode, 'PRO-1YR', 'Plan code must match');
+  assert.ok(status.license.remainingDays >= 29 && status.license.remainingDays <= 31, 'Remaining days calculation must be ~30 days');
+
+  // 6. Deactivation
+  deactivateLicenseLocal();
+  const deactivatedStatus = getLicenseStatus();
+  assert.ok(!deactivatedStatus.isLicensed, 'Deactivated license must not be valid');
+});
+
+test('15. Role-based Authentication & Password Security', () => {
+  // Test valid login
+  const adminLogin = authenticateUser('admin', 'admin123');
+  assert.ok(adminLogin.success, 'Admin credentials must authenticate successfully');
+  assert.equal(adminLogin.user.username, 'admin');
+  assert.equal(adminLogin.user.roleName, 'Administrator');
+
+  const pharmaLogin = authenticateUser('pharmacist', 'pharma123');
+  assert.ok(pharmaLogin.success, 'Pharmacist credentials must authenticate');
+  assert.equal(pharmaLogin.user.roleName, 'Pharmacist');
+
+  const cashierLogin = authenticateUser('cashier', 'cashier123');
+  assert.ok(cashierLogin.success, 'Cashier credentials must authenticate');
+  assert.equal(cashierLogin.user.roleName, 'Billing Operator');
+
+  // Test invalid password
+  const failPass = authenticateUser('admin', 'wrongpassword');
+  assert.ok(!failPass.success, 'Invalid password must be rejected');
+
+  // Test non-existent user
+  const failUser = authenticateUser('nonexistent_user', 'password');
+  assert.ok(!failUser.success, 'Non-existent user must be rejected');
+});
+
 
 

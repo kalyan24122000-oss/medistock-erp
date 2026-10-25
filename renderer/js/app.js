@@ -274,11 +274,68 @@ window.MediStock = {
           window.MediStockViews.billing.saveAndPrintInvoice();
         }
       }
+      // Alt+L: Operator Sign Out / Shift Switch
+      else if (e.altKey && (e.key === 'l' || e.key === 'L')) {
+        e.preventDefault();
+        this.logout();
+      }
       // Escape: Close active modal or clear search
       else if (e.key === 'Escape') {
         this.closeModal();
       }
     });
+  },
+
+  showLicenseScreen() {
+    this.activeView = 'license';
+    const container = document.getElementById('view-container');
+    if (window.MediStockViews && window.MediStockViews.license) {
+      window.MediStockViews.license.render(container);
+    }
+  },
+
+  showLoginScreen() {
+    this.activeView = 'login';
+    const container = document.getElementById('view-container');
+    if (window.MediStockViews && window.MediStockViews.login) {
+      window.MediStockViews.login.render(container);
+    }
+  },
+
+  applySessionUser(user) {
+    if (!user) return;
+    this.currentUser = user;
+
+    // Topbar user badge
+    const topUser = document.getElementById('topbar-username');
+    if (topUser) {
+      topUser.textContent = `${user.fullName || user.username} (${user.roleName || 'Operator'})`;
+    }
+
+    // Sidebar user badge
+    const sideName = document.getElementById('user-display-name');
+    const sideRole = document.getElementById('user-display-role');
+    const sideAvatar = document.getElementById('user-avatar');
+
+    if (sideName) sideName.textContent = user.fullName || user.username;
+    if (sideRole) sideRole.textContent = user.roleName || 'Operator';
+    if (sideAvatar) {
+      const nameForInitials = user.fullName || user.username || 'OP';
+      sideAvatar.textContent = nameForInitials.slice(0, 2).toUpperCase();
+    }
+  },
+
+  onLoginSuccess(user) {
+    sessionStorage.setItem('medistock_session_user', JSON.stringify(user));
+    this.applySessionUser(user);
+    this.initCompanyHeader();
+    this.navigate('dashboard');
+  },
+
+  logout() {
+    sessionStorage.removeItem('medistock_session_user');
+    this.showLoginScreen();
+    this.toast('Signed out from counter. Please log in.', 'info');
   },
 
   async initCompanyHeader() {
@@ -331,6 +388,14 @@ window.MediStock = {
       });
     }
 
+    // Topbar Logout button
+    const btnLogout = document.getElementById('btn-topbar-logout');
+    if (btnLogout) {
+      btnLogout.addEventListener('click', () => {
+        this.logout();
+      });
+    }
+
     // Sidebar navigation clicks
     document.querySelectorAll('.sidebar-nav .nav-item').forEach((item) => {
       item.addEventListener('click', (e) => {
@@ -349,6 +414,35 @@ async function bootstrapApp() {
   MediStock.bindGlobalShortcuts();
   MediStock.bindUiControls();
   await MediStock.initCompanyHeader();
+
+  // 1. Hardware-bound License Check
+  try {
+    const lic = await window.api.license.getStatus();
+    if (!lic || !lic.isLicensed) {
+      console.log('License not active on this machine. Opening activation screen.');
+      MediStock.showLicenseScreen();
+      return;
+    }
+  } catch (err) {
+    console.warn('License status check warning:', err.message);
+  }
+
+  // 2. Operator Session Verification
+  const savedSession = sessionStorage.getItem('medistock_session_user');
+  if (!savedSession) {
+    console.log('No operator logged in. Opening login screen.');
+    MediStock.showLoginScreen();
+    return;
+  }
+
+  try {
+    const user = JSON.parse(savedSession);
+    MediStock.applySessionUser(user);
+  } catch (e) {
+    MediStock.showLoginScreen();
+    return;
+  }
+
   await MediStock.navigate('dashboard');
   console.log('MediStock UI ready!');
 }

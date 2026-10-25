@@ -112,6 +112,15 @@ contextBridge.exposeInMainWorld('api', {
     updateAppSetting: (key, val) => ipcRenderer.invoke('settings:updateAppSetting', { key, val }),
   },
 
+  // Licensing & Activation
+  license: {
+    getStatus: () => ipcRenderer.invoke('license:getStatus'),
+    getHardwareId: () => ipcRenderer.invoke('license:getHardwareId'),
+    activate: (key, serverUrl) => ipcRenderer.invoke('license:activate', { key, serverUrl }),
+    sync: () => ipcRenderer.invoke('license:sync'),
+    deactivate: () => ipcRenderer.invoke('license:deactivate'),
+  },
+
   // Hardware / Window / Print
   system: {
     minimize: () => ipcRenderer.send('window:minimize'),

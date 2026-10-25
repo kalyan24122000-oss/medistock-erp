@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MediStock Authority — Licensing & Remote Administration Portal</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <!-- Top Navigation Header -->
+  <header class="admin-navbar">
+    <div class="brand-wrap">
+      <div class="brand-logo-icon">M</div>
+      <div class="brand-text">
+        <h1>MediStock Licensing Authority</h1>
+        <span>Central Security & Remote Activation Portal</span>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <div class="server-pill" id="server-status-pill">
+        <div class="server-dot"></div>
+        <span id="server-status-text">Backend Active (Port 5000)</span>
+      </div>
+
+      <div class="admin-user-pill" id="admin-user-badge">
+        <span>👤</span>
+        <strong id="admin-display-name">SuperAdmin</strong>
+        <button class="btn btn-outline btn-sm" id="btn-admin-logout" title="Sign out from administration portal" style="padding: 2px 8px; margin-left: 6px;">
+          Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="admin-container">
+    <!-- KPI Stats Cards -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon purple">🔑</div>
+        <div class="stat-content">
+          <div class="stat-label">Total Licenses</div>
+          <div class="stat-value" id="kpi-total-licenses">-</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon green">🟢</div>
+        <div class="stat-content">
+          <div class="stat-label">Active Pharmacies</div>
+          <div class="stat-value" id="kpi-active-licenses">-</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon amber">⏳</div>
+        <div class="stat-content">
+          <div class="stat-label">Expired Licenses</div>
+          <div class="stat-value" id="kpi-expired-licenses">-</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon red">⛔</div>
+        <div class="stat-content">
+          <div class="stat-label">Revoked Licenses</div>
+          <div class="stat-value" id="kpi-revoked-licenses">-</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon blue">💓</div>
+        <div class="stat-content">
+          <div class="stat-label">Today's Heartbeats</div>
+          <div class="stat-value" id="kpi-heartbeats">-</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Toolbar: Search, Filters & Generate Key Action -->
+    <div class="toolbar-wrap">
+      <div class="search-filter-box">
+        <input type="text" id="license-search-input" class="search-input" placeholder="🔍 Search by Pharmacy Name, Key, Phone, or Contact Person...">
+        <select id="status-filter-select" class="filter-select">
+          <option value="ALL">All Statuses</option>
+          <option value="ACTIVE">Active Only</option>
+          <option value="EXPIRED">Expired Only</option>
+          <option value="REVOKED">Revoked Only</option>
+        </select>
+        <button class="btn btn-outline" id="btn-refresh-list" title="Refresh list from backend">
+          🔄 Refresh
+        </button>
+      </div>
+
+      <div>
+        <button class="btn btn-primary" id="btn-open-generate-modal">
+          ✨ Generate New License Key
+        </button>
+      </div>
+    </div>
+
+    <!-- License Directory Panel -->
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>📋</span> Customer Licenses & Machine Hardware Bindings
+        </div>
+        <span style="font-size: 11px; color: var(--text-muted);" id="table-count-label">Loading registry...</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>License Key</th>
+              <th>Pharmacy & Contact</th>
+              <th>Plan</th>
+              <th>Branches</th>
+              <th>Bound Hardware ID (HWID)</th>
+              <th>Expiry Date</th>
+              <th>Status</th>
+              <th style="text-align: right;">Admin Actions</th>
+            </tr>
+          </thead>
+          <tbody id="licenses-table-body">
+            <tr>
+              <td colspan="8" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                Connecting to MediStock Licensing Server...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Real-time Telemetry & Audit Logs -->
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>📡</span> Client Telemetry, Activations & Audit Trail
+        </div>
+        <button class="btn btn-outline btn-sm" id="btn-refresh-logs">Update Logs</button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th style="width: 16%;">Timestamp</th>
+              <th style="width: 14%;">Event</th>
+              <th style="width: 25%;">Pharmacy / License</th>
+              <th style="width: 15%;">Hardware ID</th>
+              <th style="width: 12%;">Client IP</th>
+              <th style="width: 18%;">Details</th>
+            </tr>
+          </thead>
+          <tbody id="audit-logs-body">
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 18px; color: var(--text-muted);">
+                Loading telemetry logs...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Universal Modal Container -->
+  <div id="modal-container"></div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Admin Panel Scripts -->
+  <script src="js/admin.js"></script>
+</body>
+</html>

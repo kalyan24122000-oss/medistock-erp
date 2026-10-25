@@ -21,6 +21,7 @@ const complianceService = require('../services/compliance-service');
 const reportService = require('../services/report-service');
 const backupService = require('../services/backup-service');
 const exportService = require('../services/export-service');
+const licenseService = require('../services/license-service');
 
 let mainWindow = null;
 
@@ -175,6 +176,13 @@ function registerIpcHandlers() {
   ipcMain.handle('settings:updateCompany', async (_, data) => partyService.updateCompanyDetails(data));
   ipcMain.handle('settings:getAppSettings', async () => partyService.getAppSettings());
   ipcMain.handle('settings:updateAppSetting', async (_, { key, val }) => partyService.updateAppSetting(key, val));
+
+  // Licensing
+  ipcMain.handle('license:getStatus', async () => licenseService.getLicenseStatus());
+  ipcMain.handle('license:getHardwareId', async () => licenseService.getMachineHardwareId());
+  ipcMain.handle('license:activate', async (_, { key, serverUrl }) => licenseService.activateLicenseOnline(key, serverUrl));
+  ipcMain.handle('license:sync', async () => licenseService.syncLicenseHeartbeat());
+  ipcMain.handle('license:deactivate', async () => licenseService.deactivateLocalLicense());
 
   // System & Window Actions
   ipcMain.on('window:minimize', () => mainWindow && mainWindow.minimize());

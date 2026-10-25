@@ -8,6 +8,8 @@
     "start": "electron .",
     "test": "node --test tests/test-suite.test.js",
     "seed": "node database/seed.js",
+    "backend": "node backend/server.js",
+    "admin": "node admin-panel/server.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --win nsis"
   },
