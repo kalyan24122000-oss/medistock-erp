@@ -7,7 +7,11 @@ contextBridge.exposeInMainWorld('api', {
   // Authentication & Users
   auth: {
     login: (username, password) => ipcRenderer.invoke('auth:login', { username, password }),
-    changePassword: (oldPassword, newPassword) => ipcRenderer.invoke('auth:changePassword', { oldPassword, newPassword }),
+    changePassword: (params) => ipcRenderer.invoke('auth:changePassword', params),
+    updateProfile: (userId, data) => ipcRenderer.invoke('auth:updateProfile', { userId, data }),
+    adminResetPassword: (userId, newPassword) => ipcRenderer.invoke('auth:adminResetPassword', { userId, newPassword }),
+    deleteUser: (userId) => ipcRenderer.invoke('auth:deleteUser', userId),
+    getUserById: (userId) => ipcRenderer.invoke('auth:getUserById', userId),
     listUsers: () => ipcRenderer.invoke('auth:listUsers'),
     createUser: (userData) => ipcRenderer.invoke('auth:createUser', userData),
     listRoles: () => ipcRenderer.invoke('auth:listRoles'),

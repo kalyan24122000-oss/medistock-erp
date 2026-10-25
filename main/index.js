@@ -64,12 +64,24 @@ function createWindow() {
 
 // Register all IPC Handlers
 function registerIpcHandlers() {
-  // Auth
+  // Auth & User Management
   ipcMain.handle('auth:login', async (_, { username, password }) => {
     return authService.login(username, password);
   });
-  ipcMain.handle('auth:changePassword', async (_, { oldPassword, newPassword }) => {
-    return authService.changePassword(oldPassword, newPassword);
+  ipcMain.handle('auth:changePassword', async (_, params) => {
+    return authService.changePassword(params);
+  });
+  ipcMain.handle('auth:updateProfile', async (_, { userId, data }) => {
+    return authService.updateUserProfile(userId, data);
+  });
+  ipcMain.handle('auth:adminResetPassword', async (_, { userId, newPassword }) => {
+    return authService.adminResetPassword(userId, newPassword);
+  });
+  ipcMain.handle('auth:deleteUser', async (_, userId) => {
+    return authService.deleteUser(userId);
+  });
+  ipcMain.handle('auth:getUserById', async (_, userId) => {
+    return authService.getUserById(userId);
   });
   ipcMain.handle('auth:listUsers', async () => authService.listUsers());
   ipcMain.handle('auth:createUser', async (_, data) => authService.createUser(data));

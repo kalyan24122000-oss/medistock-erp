@@ -388,6 +388,14 @@ window.MediStock = {
       });
     }
 
+    // Topbar Profile button
+    const btnProfile = document.getElementById('btn-topbar-profile');
+    if (btnProfile) {
+      btnProfile.addEventListener('click', () => {
+        this.openMyAccountModal();
+      });
+    }
+
     // Topbar Logout button
     const btnLogout = document.getElementById('btn-topbar-logout');
     if (btnLogout) {
@@ -404,6 +412,160 @@ window.MediStock = {
         if (viewName) this.navigate(viewName);
       });
     });
+  },
+
+  openMyAccountModal() {
+    const user = this.currentUser || {};
+    const userId = user.id || 1;
+
+    const bodyHtml = `
+      <form id="my-account-form">
+        <div style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.08), rgba(245, 158, 11, 0.04)); padding: 12px; border-radius: 8px; margin-bottom: 16px; border: 1px solid rgba(2, 132, 199, 0.2);">
+          <div style="font-size: 13.5px; font-weight: 800; color: #0284c7;">
+            👤 ${user.fullName || user.username}
+          </div>
+          <div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">
+            Role: <strong>${user.roleName || 'Operator'}</strong> | Branch: <strong>${user.branchName || 'Main Store'}</strong>
+          </div>
+        </div>
+
+        <h4 style="font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 8px;">1. Profile & Contact Details</h4>
+        <div class="form-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 12px;">
+          <div class="form-group">
+            <label class="form-label">Full Name *:</label>
+            <input type="text" id="my-fullname" class="form-control" value="${user.fullName || ''}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Username *:</label>
+            <input type="text" id="my-username" class="form-control" value="${user.username || ''}" required>
+          </div>
+        </div>
+
+        <div class="form-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 16px;">
+          <div class="form-group">
+            <label class="form-label">Mobile Number:</label>
+            <input type="text" id="my-phone" class="form-control" value="${user.phone || ''}" placeholder="10-digit mobile">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address:</label>
+            <input type="email" id="my-email" class="form-control" value="${user.email || ''}" placeholder="email@pharmacy.com">
+          </div>
+        </div>
+
+        <h4 style="font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 8px; border-top: 1px dashed #cbd5e1; padding-top: 12px;">
+          2. Change Password (Optional)
+        </h4>
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label class="form-label">Current Password:</label>
+          <input type="password" id="my-cur-password" class="form-control" placeholder="Required only if changing password">
+        </div>
+
+        <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="form-group">
+            <label class="form-label">New Password:</label>
+            <input type="password" id="my-new-password" class="form-control" placeholder="Min 4 characters">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm New Password:</label>
+            <input type="password" id="my-confirm-password" class="form-control" placeholder="Re-type new password">
+          </div>
+        </div>
+      </form>
+    `;
+
+    const footerHtml = `
+      <button class="btn btn-primary" id="btn-save-my-account">💾 Save Account Changes</button>
+      <button class="btn btn-secondary" onclick="MediStock.closeModal()">Cancel</button>
+    `;
+
+    this.showModal('👤 My Account & Security Settings', bodyHtml, footerHtml, 'md');
+
+    const btnSave = document.getElementById('btn-save-my-account');
+    if (btnSave) {
+      btnSave.addEventListener('click', async () => {
+        const fullName = document.getElementById('my-fullname').value.trim();
+        const username = document.getElementById('my-username').value.trim();
+        const phone = document.getElementById('my-phone').value.trim();
+        const email = document.getElementById('my-email').value.trim();
+        const curPassword = document.getElementById('my-cur-password').value;
+        const newPassword = document.getElementById('my-new-password').value;
+        const confirmPassword = document.getElementById('my-confirm-password').value;
+
+        if (!fullName || !username) {
+          return this.toast('Full Name and Username cannot be empty', 'warning');
+        }
+
+        btnSave.disabled = true;
+        btnSave.textContent = 'Saving...';
+
+        try {
+          // 1. Update Profile (Name, Username, Phone, Email)
+          const profileRes = await window.api.auth.updateProfile(userId, {
+            fullName,
+            username,
+            phone,
+            email,
+          });
+
+          if (!profileRes || !profileRes.success) {
+            btnSave.disabled = false;
+            btnSave.textContent = '💾 Save Account Changes';
+            return this.toast(profileRes.message || 'Failed to update profile', 'error');
+          }
+
+          // 2. Change Password if entered
+          if (newPassword || curPassword) {
+            if (!curPassword) {
+              btnSave.disabled = false;
+              btnSave.textContent = '💾 Save Account Changes';
+              return this.toast('Please enter your Current Password to change it', 'warning');
+            }
+            if (newPassword !== confirmPassword) {
+              btnSave.disabled = false;
+              btnSave.textContent = '💾 Save Account Changes';
+              return this.toast('New Passwords do not match', 'error');
+            }
+            if (newPassword.length < 4) {
+              btnSave.disabled = false;
+              btnSave.textContent = '💾 Save Account Changes';
+              return this.toast('Password must be at least 4 characters long', 'warning');
+            }
+
+            const pwdRes = await window.api.auth.changePassword({
+              userId,
+              oldPassword: curPassword,
+              newPassword,
+            });
+
+            if (!pwdRes || !pwdRes.success) {
+              btnSave.disabled = false;
+              btnSave.textContent = '💾 Save Account Changes';
+              return this.toast(pwdRes.message || 'Password change failed', 'error');
+            }
+          }
+
+          // Update active session in memory
+          this.currentUser.fullName = fullName;
+          this.currentUser.username = username;
+          this.currentUser.phone = phone;
+          this.currentUser.email = email;
+          sessionStorage.setItem('medistock_session_user', JSON.stringify(this.currentUser));
+          this.applySessionUser(this.currentUser);
+
+          this.toast('Account changes saved successfully!', 'success');
+          this.closeModal();
+
+          // If on settings/users tab, refresh it
+          if (this.activeView === 'settings') {
+            if (window.MediStockViews.users) window.MediStockViews.users.loadUsers();
+          }
+        } catch (err) {
+          this.toast(`Error updating account: ${err.message}`, 'error');
+          btnSave.disabled = false;
+          btnSave.textContent = '💾 Save Account Changes';
+        }
+      });
+    }
   },
 };
 
