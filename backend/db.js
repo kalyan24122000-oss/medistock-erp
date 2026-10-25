@@ -6,12 +6,12 @@ const fs = require('fs');
 const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
 
-const DATA_DIR = path.join(__dirname, 'data');
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-const DB_PATH = path.join(DATA_DIR, 'license_master.db');
+const DB_PATH = process.env.DATABASE_PATH || path.join(DATA_DIR, 'license_master.db');
 
 let dbInstance = null;
 

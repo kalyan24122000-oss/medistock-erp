@@ -1,0 +1,26 @@
+{
+  "name": "medistock-license-backend",
+  "version": "1.0.0",
+  "description": "MediStock ERP Central Licensing & Machine Verification REST API Server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "licensing",
+    "pharmacy-erp",
+    "activation",
+    "hwid",
+    "rest-api"
+  ],
+  "author": "MediStock Technologies",
+  "license": "Proprietary",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^13.0.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
