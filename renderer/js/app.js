@@ -27,6 +27,67 @@ window.MediStock = {
     return isoDate;
   },
 
+  numberToWords(num) {
+    if (!num || isNaN(num) || num <= 0) return 'Zero Rupees Only';
+    const a = [
+      '', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ',
+      'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '
+    ];
+    const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+    const inWords = (n) => {
+      let str = '';
+      if (n > 19) {
+        str += b[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + a[n % 10] : ' ');
+      } else {
+        str += a[n];
+      }
+      return str;
+    };
+
+    const n = Math.floor(num);
+    const crore = Math.floor(n / 10000000);
+    const lakh = Math.floor((n % 10000000) / 100000);
+    const thousand = Math.floor((n % 100000) / 1000);
+    const hundred = Math.floor((n % 1000) / 100);
+    const rest = Math.floor(n % 100);
+
+    let res = '';
+    if (crore > 0) res += inWords(crore) + 'Crore ';
+    if (lakh > 0) res += inWords(lakh) + 'Lakh ';
+    if (thousand > 0) res += inWords(thousand) + 'Thousand ';
+    if (hundred > 0) res += inWords(hundred) + 'Hundred ';
+    if (rest > 0) res += inWords(rest);
+
+    return `Rupees ${res.trim()} Only`;
+  },
+
+  setTheme(themeName) {
+    const validThemes = ['classic', 'navy', 'red', 'emerald', 'dark'];
+    const selected = validThemes.includes(themeName) ? themeName : 'classic';
+    document.documentElement.setAttribute('data-theme', selected);
+    localStorage.setItem('medistock_theme', selected);
+
+    const picker = document.getElementById('global-theme-picker');
+    if (picker && picker.value !== selected) {
+      picker.value = selected;
+    }
+  },
+
+  initTheme() {
+    const savedTheme = localStorage.getItem('medistock_theme') || 'classic';
+    this.setTheme(savedTheme);
+
+    const picker = document.getElementById('global-theme-picker');
+    if (picker) {
+      picker.value = savedTheme;
+      picker.addEventListener('change', (e) => {
+        this.setTheme(e.target.value);
+        this.toast(`Theme switched to ${e.target.options[e.target.selectedIndex].text}`, 'info');
+      });
+    }
+  },
+
   toast(message, type = 'info') {
     const container = document.getElementById('toast-container');
     if (!container) return;
@@ -283,6 +344,7 @@ window.MediStock = {
 
 async function bootstrapApp() {
   console.log('MediStock bootstrapping UI...');
+  MediStock.initTheme();
   MediStock.initClock();
   MediStock.bindGlobalShortcuts();
   MediStock.bindUiControls();

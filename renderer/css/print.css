@@ -1,20 +1,126 @@
-/* renderer/css/print.css - Thermal Receipt (80mm) and A4 GST Tax Invoice Print Styles */
+/* renderer/css/print.css - Multi-Format Bill Printing: 80mm Thermal, A4 GST Tax Invoice, A5 Chemist Bill, 58mm Mini Slip */
 
 @media screen {
   .print-only {
     display: none !important;
   }
+
+  /* Screen Modal Paper Preview Styles */
+  .bill-preview-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+  }
+
+  .bill-format-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f1f5f9;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .bill-format-btn-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .bill-format-btn {
+    padding: 5px 12px;
+    font-size: 11.5px;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: #ffffff;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .bill-format-btn:hover {
+    background: #e2e8f0;
+  }
+
+  .bill-format-btn.active {
+    background: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+
+  .bill-preview-stage {
+    background: #64748b;
+    padding: 20px;
+    border-radius: var(--radius);
+    max-height: 520px;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .bill-preview-paper {
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    box-sizing: border-box;
+  }
+
+  .bill-preview-paper.format-80mm {
+    width: 320px;
+    padding: 16px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+  }
+
+  .bill-preview-paper.format-58mm {
+    width: 250px;
+    padding: 12px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 10px;
+  }
+
+  .bill-preview-paper.format-a4 {
+    width: 760px;
+    padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+
+  .bill-preview-paper.format-a5 {
+    width: 580px;
+    padding: 18px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  }
 }
 
+/* ========================================================= */
+/* Print-Only Layout Rules                                   */
+/* ========================================================= */
 @media print {
+  @page {
+    margin: 5mm;
+  }
+
   body {
     background: #fff !important;
     color: #000 !important;
     font-size: 11px !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   #sidebar,
   #topbar,
+  #modal-container,
+  #app-container,
+  #main-wrapper,
+  #view-container,
   .billing-header-card,
   .billing-search-row,
   .billing-actions,
@@ -26,129 +132,442 @@
     display: none !important;
   }
 
-  #app-container,
-  #main-wrapper,
-  #view-container {
-    display: block !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    height: auto !important;
-    overflow: visible !important;
-  }
-
   .print-only {
     display: block !important;
   }
 
-  /* 80mm Thermal Receipt Layout */
-  .thermal-receipt {
-    width: 76mm;
-    margin: 0 auto;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 11px;
-    line-height: 1.25;
-    color: #000;
-  }
-
-  .thermal-header {
-    text-align: center;
-    border-bottom: 1px dashed #000;
-    padding-bottom: 6px;
-    margin-bottom: 6px;
-  }
-
-  .thermal-title {
-    font-size: 14px;
-    font-weight: bold;
-    text-transform: uppercase;
-  }
-
-  .thermal-meta {
-    font-size: 10px;
-    margin-top: 2px;
-  }
-
-  .thermal-bill-info {
-    border-bottom: 1px dashed #000;
-    padding-bottom: 4px;
-    margin-bottom: 6px;
-    font-size: 10.5px;
-  }
-
-  .thermal-table {
+  #print-container {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
     width: 100%;
-    border-collapse: collapse;
-    font-size: 10.5px;
-    margin-bottom: 6px;
+    margin: 0;
+    padding: 0;
+    background: #fff !important;
+    color: #000 !important;
   }
+}
 
-  .thermal-table th {
-    border-bottom: 1px solid #000;
-    text-align: left;
-    padding: 2px 0;
-  }
+/* ========================================================= */
+/* 1. 80mm Thermal Receipt Layout (3-inch POS)               */
+/* ========================================================= */
+.thermal-receipt {
+  width: 76mm;
+  margin: 0 auto;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  line-height: 1.25;
+  color: #000;
+  box-sizing: border-box;
+}
 
-  .thermal-table td {
-    padding: 2px 0;
-  }
+.thermal-receipt .receipt-header {
+  text-align: center;
+  border-bottom: 1px dashed #000;
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+}
 
-  .thermal-totals {
-    border-top: 1px dashed #000;
-    padding-top: 4px;
-    margin-top: 4px;
-    border-bottom: 1px dashed #000;
-    padding-bottom: 4px;
-  }
+.thermal-receipt .store-name {
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
 
-  .thermal-total-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-  }
+.thermal-receipt .store-meta {
+  font-size: 9.5px;
+  margin-top: 2px;
+}
 
-  .thermal-grand-total {
-    font-size: 13px;
-    font-weight: bold;
-    display: flex;
-    justify-content: space-between;
-    margin-top: 2px;
-  }
+.thermal-receipt .bill-meta {
+  border-bottom: 1px dashed #000;
+  padding-bottom: 4px;
+  margin-bottom: 5px;
+  font-size: 10px;
+}
 
-  .thermal-footer {
-    text-align: center;
-    margin-top: 8px;
-    font-size: 10px;
-  }
+.thermal-receipt .bill-meta-row {
+  display: flex;
+  justify-content: space-between;
+}
 
-  /* A4 Invoice Layout */
-  .a4-invoice {
-    width: 100%;
-    padding: 10mm;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    color: #000;
-  }
+.thermal-receipt table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+  margin-bottom: 5px;
+}
 
-  .a4-header {
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 2px solid #000;
-    padding-bottom: 8px;
-    margin-bottom: 10px;
-  }
+.thermal-receipt th {
+  border-bottom: 1px solid #000;
+  text-align: left;
+  padding: 2px 0;
+  font-size: 9.5px;
+}
 
-  .a4-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-  }
+.thermal-receipt td {
+  padding: 2px 0;
+}
 
-  .a4-table th, .a4-table td {
-    border: 1px solid #333;
-    padding: 5px;
-    font-size: 11px;
-  }
+.thermal-receipt .totals-box {
+  border-top: 1px dashed #000;
+  border-bottom: 1px dashed #000;
+  padding: 4px 0;
+  margin-top: 4px;
+  font-size: 10.5px;
+}
 
-  .a4-table th {
-    background-color: #f0f0f0;
-  }
+.thermal-receipt .total-line {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.thermal-receipt .grand-total-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: bold;
+  margin-top: 3px;
+}
+
+.thermal-receipt .receipt-footer {
+  text-align: center;
+  margin-top: 8px;
+  font-size: 9.5px;
+}
+
+/* ========================================================= */
+/* 2. 58mm Mini Thermal Slip (2-inch Portable POS)           */
+/* ========================================================= */
+.thermal-58mm {
+  width: 52mm;
+  margin: 0 auto;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 9.5px;
+  line-height: 1.2;
+  color: #000;
+  box-sizing: border-box;
+}
+
+.thermal-58mm .store-name {
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.thermal-58mm .store-meta {
+  font-size: 8.5px;
+  text-align: center;
+  border-bottom: 1px dashed #000;
+  padding-bottom: 3px;
+  margin-bottom: 4px;
+}
+
+.thermal-58mm .bill-meta {
+  font-size: 8.5px;
+  border-bottom: 1px dashed #000;
+  padding-bottom: 3px;
+  margin-bottom: 4px;
+}
+
+.thermal-58mm table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8.5px;
+}
+
+.thermal-58mm th {
+  border-bottom: 1px solid #000;
+  text-align: left;
+  padding: 1px 0;
+}
+
+.thermal-58mm td {
+  padding: 1px 0;
+}
+
+.thermal-58mm .totals-box {
+  border-top: 1px dashed #000;
+  border-bottom: 1px dashed #000;
+  padding: 3px 0;
+  margin-top: 3px;
+  font-size: 9px;
+}
+
+.thermal-58mm .grand-total-line {
+  font-size: 11px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+}
+
+.thermal-58mm .receipt-footer {
+  text-align: center;
+  margin-top: 6px;
+  font-size: 8.5px;
+}
+
+/* ========================================================= */
+/* 3. A4 Full GST Tax Invoice                                */
+/* ========================================================= */
+.a4-invoice {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  color: #000;
+  border: 1.5px solid #000;
+  padding: 12px;
+  font-size: 11px;
+}
+
+.a4-invoice .invoice-banner {
+  text-align: center;
+  font-size: 13px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-bottom: 4px;
+  border-bottom: 1.5px solid #000;
+  margin-bottom: 8px;
+}
+
+.a4-invoice .header-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+  border-bottom: 1px solid #000;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.a4-invoice .company-block h2 {
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.a4-invoice .company-block p {
+  font-size: 10px;
+  line-height: 1.3;
+  margin: 1px 0;
+}
+
+.a4-invoice .invoice-meta-block {
+  text-align: right;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.a4-invoice .invoice-meta-block .inv-num {
+  font-size: 13px;
+  font-weight: bold;
+  color: #000;
+}
+
+.a4-invoice .parties-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  border: 1px solid #000;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  font-size: 10.5px;
+  background-color: #fafafa;
+}
+
+.a4-invoice .parties-grid h4 {
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+  border-bottom: 1px dotted #666;
+  padding-bottom: 2px;
+}
+
+.a4-invoice .items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+}
+
+.a4-invoice .items-table th,
+.a4-invoice .items-table td {
+  border: 1px solid #000;
+  padding: 4px 6px;
+  font-size: 9.5px;
+}
+
+.a4-invoice .items-table th {
+  background-color: #f1f5f9;
+  text-align: center;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.a4-invoice .tax-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+  font-size: 9.5px;
+}
+
+.a4-invoice .tax-summary-table th,
+.a4-invoice .tax-summary-table td {
+  border: 1px solid #000;
+  padding: 3px 5px;
+  text-align: right;
+}
+
+.a4-invoice .tax-summary-table th {
+  background-color: #f1f5f9;
+  text-align: center;
+}
+
+.a4-invoice .footer-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 12px;
+  border-top: 1px solid #000;
+  padding-top: 8px;
+}
+
+.a4-invoice .terms-block {
+  font-size: 9.5px;
+  line-height: 1.35;
+}
+
+.a4-invoice .bank-box {
+  background-color: #f8fafc;
+  border: 1px dotted #666;
+  padding: 4px 6px;
+  margin-top: 6px;
+  font-size: 9.5px;
+}
+
+.a4-invoice .totals-summary {
+  font-size: 10.5px;
+}
+
+.a4-invoice .totals-summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.a4-invoice .totals-grand-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: bold;
+  border-top: 1.5px solid #000;
+  border-bottom: 1.5px solid #000;
+  padding: 4px 0;
+  margin-top: 4px;
+}
+
+.a4-invoice .signatory-box {
+  text-align: right;
+  margin-top: 25px;
+  font-size: 10px;
+}
+
+/* ========================================================= */
+/* 4. A5 Chemist Half-Page Bill (Standard Bill Book)         */
+/* ========================================================= */
+.a5-invoice {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  color: #000;
+  border: 1px solid #000;
+  padding: 8px 10px;
+  font-size: 10.5px;
+}
+
+.a5-invoice .a5-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #000;
+  padding-bottom: 4px;
+  margin-bottom: 6px;
+}
+
+.a5-invoice .a5-store-name {
+  font-size: 13.5px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.a5-invoice .a5-store-meta {
+  font-size: 9px;
+  line-height: 1.25;
+}
+
+.a5-invoice .a5-bill-meta {
+  text-align: right;
+  font-size: 9.5px;
+  line-height: 1.3;
+}
+
+.a5-invoice .a5-parties {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #000;
+  padding-bottom: 3px;
+  margin-bottom: 5px;
+  font-size: 9.5px;
+}
+
+.a5-invoice .a5-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 5px;
+}
+
+.a5-invoice .a5-table th,
+.a5-invoice .a5-table td {
+  border: 1px solid #333;
+  padding: 3px 4px;
+  font-size: 9px;
+}
+
+.a5-invoice .a5-table th {
+  background-color: #f1f5f9;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.a5-invoice .a5-footer {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 10px;
+  border-top: 1px solid #000;
+  padding-top: 4px;
+}
+
+.a5-invoice .a5-total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9.5px;
+}
+
+.a5-invoice .a5-grand-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: bold;
+  border-top: 1px solid #000;
+  margin-top: 2px;
+  padding-top: 2px;
+}
+
+.a5-invoice .a5-sign-box {
+  text-align: right;
+  margin-top: 15px;
+  font-size: 9px;
 }

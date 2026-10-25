@@ -445,12 +445,12 @@
 }
 
 .billing-grand-total-box {
-  background: linear-gradient(135deg, #0284c7, #0369a1);
+  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
   color: #ffffff;
   padding: 8px 18px;
   border-radius: var(--radius);
   text-align: right;
-  box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.3);
+  box-shadow: 0 4px 6px -1px rgba(var(--primary-rgb), 0.3);
 }
 
 .grand-total-label {

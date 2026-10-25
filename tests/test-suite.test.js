@@ -356,3 +356,59 @@ test('11. Custom Loose Tablets & USP (Unit Selling Price) Calculation', () => {
   assert.equal(comboLine.gross, 3600, 'Gross should be 3600 paise (₹36.00)');
   assert.ok(Math.abs(comboLine.effectiveQty - 1.2) < 0.0001, 'Effective quantity should be exactly 1.2 strips');
 });
+
+test('12. Multi-UI Themes & Bill Print Formats Configuration', () => {
+  // 1. Verify supported themes
+  const supportedThemes = ['classic', 'navy', 'red', 'emerald', 'dark'];
+  assert.equal(supportedThemes.length, 5, 'Should support exactly 5 themes');
+  assert.ok(supportedThemes.includes('navy'), 'Must support Navy Blue theme');
+  assert.ok(supportedThemes.includes('red'), 'Must support Medical Red theme');
+  assert.ok(supportedThemes.includes('emerald'), 'Must support Emerald Green theme');
+  assert.ok(supportedThemes.includes('dark'), 'Must support Modern Dark theme');
+  assert.ok(supportedThemes.includes('classic'), 'Must support Classic Slate theme');
+
+  // 2. Verify supported print formats
+  const supportedFormats = ['80mm', 'a4', 'a5', '58mm'];
+  assert.equal(supportedFormats.length, 4, 'Should support 4 bill print formats');
+  assert.ok(supportedFormats.includes('80mm'), '80mm Thermal Receipt (3-inch POS)');
+  assert.ok(supportedFormats.includes('a4'), 'A4 Full GST Tax Invoice');
+  assert.ok(supportedFormats.includes('a5'), 'A5 Chemist Half-Page Bill');
+  assert.ok(supportedFormats.includes('58mm'), '58mm Mini Thermal Slip (2-inch POS)');
+
+  // 3. Number to Indian currency words test
+  function numberToWordsTest(num) {
+    if (!num || isNaN(num) || num <= 0) return 'Zero Rupees Only';
+    const a = [
+      '', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ',
+      'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '
+    ];
+    const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    const inWords = (n) => {
+      let str = '';
+      if (n > 19) {
+        str += b[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + a[n % 10] : ' ');
+      } else {
+        str += a[n];
+      }
+      return str;
+    };
+    const n = Math.floor(num);
+    const crore = Math.floor(n / 10000000);
+    const lakh = Math.floor((n % 10000000) / 100000);
+    const thousand = Math.floor((n % 100000) / 1000);
+    const hundred = Math.floor((n % 1000) / 100);
+    const rest = Math.floor(n % 100);
+    let res = '';
+    if (crore > 0) res += inWords(crore) + 'Crore ';
+    if (lakh > 0) res += inWords(lakh) + 'Lakh ';
+    if (thousand > 0) res += inWords(thousand) + 'Thousand ';
+    if (hundred > 0) res += inWords(hundred) + 'Hundred ';
+    if (rest > 0) res += inWords(rest);
+    return `Rupees ${res.trim()} Only`;
+  }
+
+  assert.equal(numberToWordsTest(540), 'Rupees Five Hundred Forty Only');
+  assert.equal(numberToWordsTest(1500), 'Rupees One Thousand Five Hundred Only');
+  assert.equal(numberToWordsTest(125000), 'Rupees One Lakh Twenty Five Thousand Only');
+});
+

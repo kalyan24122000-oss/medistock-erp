@@ -16,8 +16,9 @@ window.MediStockViews.settings = {
             <h2 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0;">⚙️ System Settings & Administration</h2>
             <p style="font-size: 11.5px; color: #64748b; margin: 2px 0 0;">Manage pharmacy profile, users, safe SQLite backups, keyboard shortcuts, and 15 navigation tabs.</p>
           </div>
-          <div style="display: flex; gap: 6px;" id="settings-tab-buttons">
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;" id="settings-tab-buttons">
             <button class="btn btn-sm ${this.activeTab === 'profile' ? 'btn-primary' : 'btn-outline'}" data-tab="profile">🏢 Company Profile</button>
+            <button class="btn btn-sm ${this.activeTab === 'themes' ? 'btn-primary' : 'btn-outline'}" data-tab="themes">🎨 Themes & Prints</button>
             <button class="btn btn-sm ${this.activeTab === 'users' ? 'btn-primary' : 'btn-outline'}" data-tab="users">👥 Users & Security</button>
             <button class="btn btn-sm ${this.activeTab === 'backup' ? 'btn-primary' : 'btn-outline'}" data-tab="backup">💾 Backup & Restore</button>
             <button class="btn btn-sm ${this.activeTab === 'shortcuts' ? 'btn-primary' : 'btn-outline'}" data-tab="shortcuts">⌨️ Shortcuts & Help</button>
@@ -46,6 +47,8 @@ window.MediStockViews.settings = {
   async renderSubTab(subContainer) {
     if (this.activeTab === 'profile') {
       await this.renderProfileTab(subContainer);
+    } else if (this.activeTab === 'themes') {
+      this.renderThemesAndPrintsTab(subContainer);
     } else if (this.activeTab === 'users') {
       if (window.MediStockViews.users) {
         window.MediStockViews.users.render(subContainer);
@@ -250,6 +253,127 @@ window.MediStockViews.settings = {
         </div>
       </div>
     `;
+  },
+
+  renderThemesAndPrintsTab(subContainer) {
+    const currentTheme = localStorage.getItem('medistock_theme') || 'classic';
+    const currentFormat = localStorage.getItem('medistock_bill_format') || '80mm';
+
+    const themes = [
+      { id: 'classic', name: 'Classic Slate', desc: 'Default sky blue accents with slate gray navigation', sidebar: '#0f172a', primary: '#0284c7', icon: '🔵' },
+      { id: 'navy', name: 'Navy Blue Theme', desc: 'Deep executive navy sidebar with royal blue accents', sidebar: '#0a192f', primary: '#1d4ed8', icon: '🔷' },
+      { id: 'red', name: 'Medical Crimson Red', desc: 'Clinical emergency red with ruby wine sidebar', sidebar: '#2b0707', primary: '#dc2626', icon: '🔴' },
+      { id: 'emerald', name: 'Emerald Pharmacy Green', desc: 'Natural herbal healthcare green with forest pine sidebar', sidebar: '#04271d', primary: '#059669', icon: '🟢' },
+      { id: 'dark', name: 'Modern Dark Mode', desc: 'Midnight OLED slate theme with high-contrast text', sidebar: '#070a12', primary: '#38bdf8', icon: '🌙' },
+    ];
+
+    const formats = [
+      { id: '80mm', name: '80mm Thermal Receipt (POS Roll)', icon: '🧾', desc: 'Standard 3-inch roll format for thermal receipt printers (Epson, TVS, Posiflex). Fast, clear, paper-efficient.', width: '76mm' },
+      { id: 'a4', name: 'A4 Full GST Tax Invoice', icon: '📄', desc: 'Formal tax invoice with complete 14-column breakdown, HSN Tax summary, bank details, and drug licenses.', width: 'Full A4 Sheet' },
+      { id: 'a5', name: 'A5 Chemist Half-Page Bill', icon: '📑', desc: 'The ubiquitous Indian chemist bill book format (148×210mm) for dot-matrix and laser half-page stationery.', width: '148 × 210 mm' },
+      { id: '58mm', name: '58mm Mini Thermal Slip', icon: '🧾', desc: 'Ultra-compact 2-inch format for portable Bluetooth and compact counter thermal printers.', width: '52mm' },
+    ];
+
+    subContainer.innerHTML = `
+      <div class="card" style="margin-bottom: 16px;">
+        <div class="card-header">
+          <div class="card-title">🎨 Visual UI Themes (Red, Navy Blue, Emerald, Dark, Classic)</div>
+          <span class="badge info">Active: ${currentTheme.toUpperCase()}</span>
+        </div>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Select your preferred color scheme. The entire ERP interface (sidebar, buttons, highlights, badges, and headers) adapts instantly.</p>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;" id="theme-cards-container">
+          ${themes.map(t => `
+            <div class="card" style="margin: 0; padding: 14px; border: 2px solid ${currentTheme === t.id ? t.primary : 'var(--border)'}; border-radius: var(--radius); cursor: pointer; transition: all 0.2s;" data-theme-id="${t.id}">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 13.5px; font-weight: 700;">${t.icon} ${t.name}</span>
+                ${currentTheme === t.id ? `<span class="badge success" style="font-size: 10px;">Active</span>` : ''}
+              </div>
+              <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; min-height: 30px;">${t.desc}</p>
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <div style="width: 28px; height: 28px; border-radius: 4px; background: ${t.sidebar}; border: 1px solid #ccc;" title="Sidebar Color"></div>
+                <div style="width: 28px; height: 28px; border-radius: 4px; background: ${t.primary}; border: 1px solid #ccc;" title="Accent Primary Color"></div>
+                <div style="font-size: 10.5px; font-family: var(--font-mono); color: var(--text-muted);">${t.primary}</div>
+              </div>
+              <button class="btn btn-sm ${currentTheme === t.id ? 'btn-primary' : 'btn-outline'}" style="width: 100%;">
+                ${currentTheme === t.id ? '✓ Activated' : 'Apply Theme'}
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🖨️ Bill Print Formats & Default Layout</div>
+          <span class="badge success">Default: ${currentFormat.toUpperCase()}</span>
+        </div>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Choose the default print format for sales invoices. You can always switch formats dynamically on the preview screen before printing.</p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 16px;" id="format-cards-container">
+          ${formats.map(f => `
+            <div class="card" style="margin: 0; padding: 14px; border: 2px solid ${currentFormat === f.id ? 'var(--primary)' : 'var(--border)'}; border-radius: var(--radius); cursor: pointer;" data-format-id="${f.id}">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 13px; font-weight: 700;">${f.icon} ${f.name}</span>
+                ${currentFormat === f.id ? `<span class="badge success" style="font-size: 10px;">Default</span>` : ''}
+              </div>
+              <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; min-height: 38px;">${f.desc}</p>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="badge neutral" style="font-size: 10px;">Width: ${f.width}</span>
+                <button class="btn btn-sm ${currentFormat === f.id ? 'btn-primary' : 'btn-outline'}">
+                  ${currentFormat === f.id ? '✓ Default' : 'Set as Default'}
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius);">
+          <div>
+            <strong>Quick Preview:</strong>
+            <span style="font-size: 11.5px; color: var(--text-muted); margin-left: 6px;">Test the print templates using your most recent bill.</span>
+          </div>
+          <button class="btn btn-outline btn-sm" id="btn-test-print-preview">👁️ Open Sample Print Preview</button>
+        </div>
+      </div>
+    `;
+
+    // Theme card clicks
+    subContainer.querySelectorAll('#theme-cards-container [data-theme-id]').forEach(card => {
+      card.addEventListener('click', () => {
+        const themeId = card.dataset.themeId;
+        MediStock.setTheme(themeId);
+        MediStock.toast(`Theme updated to ${themeId.toUpperCase()}`, 'success');
+        this.renderThemesAndPrintsTab(subContainer);
+      });
+    });
+
+    // Format card clicks
+    subContainer.querySelectorAll('#format-cards-container [data-format-id]').forEach(card => {
+      card.addEventListener('click', () => {
+        const formatId = card.dataset.formatId;
+        localStorage.setItem('medistock_bill_format', formatId);
+        MediStock.toast(`Default bill format updated to: ${formatId.toUpperCase()}`, 'success');
+        this.renderThemesAndPrintsTab(subContainer);
+      });
+    });
+
+    // Test print preview button
+    const btnTest = subContainer.querySelector('#btn-test-print-preview');
+    if (btnTest) {
+      btnTest.addEventListener('click', async () => {
+        try {
+          const invoices = await window.api.sales.listInvoices({ limit: 1 });
+          if (invoices && invoices.length > 0) {
+            MediStock.viewInvoiceDetails(invoices[0].id);
+          } else {
+            MediStock.toast('No sales invoices found yet. Create a bill first!', 'warning');
+          }
+        } catch (e) {
+          MediStock.toast(`Cannot preview: ${e.message}`, 'error');
+        }
+      });
+    }
   },
 
   async saveSetting(key) {

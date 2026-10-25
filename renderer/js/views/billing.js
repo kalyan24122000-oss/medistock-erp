@@ -829,81 +829,431 @@ window.MediStockViews.billing = {
     }
   },
 
+  render80mmReceiptHtml(inv) {
+    const company = inv.company || {};
+    return `
+      <div class="thermal-receipt">
+        <div class="receipt-header">
+          <div class="store-name">${company.trade_name || company.name || 'APEX PHARMACY'}</div>
+          <div class="store-meta">${company.address_line1 || 'Main Market Road'}, ${company.city || 'Mumbai'}</div>
+          <div class="store-meta">Ph: ${company.phone || '9876543210'} | DL: ${company.drug_license_no_1 || 'MH-WZ-123456'}</div>
+          <div class="store-meta">GSTIN: ${company.gstin || '27AABCU9603R1ZM'}</div>
+        </div>
+
+        <div class="bill-meta">
+          <div class="bill-meta-row"><span><strong>Invoice:</strong> ${inv.invoice_number}</span><span><strong>Date:</strong> ${inv.invoice_date}</span></div>
+          <div class="bill-meta-row"><span><strong>Customer:</strong> ${inv.customer_name}</span><span><strong>Ph:</strong> ${inv.customer_phone || 'Walk-in'}</span></div>
+          ${inv.doctor_name ? `<div class="bill-meta-row"><span><strong>Doctor:</strong> ${inv.doctor_name}</span><span>${inv.doctor_reg_no ? '[' + inv.doctor_reg_no + ']' : ''}</span></div>` : ''}
+          <div class="bill-meta-row"><span><strong>Payment:</strong> ${inv.payment_mode}</span><span><strong>Time:</strong> ${inv.invoice_time || 'POS'}</span></div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 38%;">Item</th>
+              <th style="width: 18%; text-align: center;">Batch</th>
+              <th style="width: 14%; text-align: center;">Exp</th>
+              <th style="width: 12%; text-align: right;">Qty</th>
+              <th style="width: 18%; text-align: right;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${inv.items.map(it => `
+              <tr>
+                <td><strong>${it.brand_name}</strong><br><span style="font-size: 8.5px; color: #555;">${it.generic_name || ''}</span></td>
+                <td style="text-align: center;">${it.batch_number}</td>
+                <td style="text-align: center;">${(it.expiry_date || '').slice(2, 7)}</td>
+                <td style="text-align: right;">${it.unit || it.quantity}</td>
+                <td style="text-align: right;">${(it.line_total / 100).toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="totals-box">
+          <div class="total-line"><span>Gross Subtotal:</span><span>${MediStock.formatRupees(inv.subtotal)}</span></div>
+          ${inv.total_discount > 0 ? `<div class="total-line"><span>Discount Saved:</span><span>-${MediStock.formatRupees(inv.total_discount)}</span></div>` : ''}
+          <div class="total-line"><span>GST (CGST+SGST):</span><span>${MediStock.formatRupees(inv.total_tax)}</span></div>
+          ${inv.round_off !== 0 ? `<div class="total-line"><span>Round-off:</span><span>${(inv.round_off / 100).toFixed(2)}</span></div>` : ''}
+          <div class="grand-total-line"><span>NET PAYABLE:</span><span>${MediStock.formatRupees(inv.grand_total)}</span></div>
+        </div>
+
+        <div class="receipt-footer">
+          <div>*** GET WELL SOON ***</div>
+          <div style="margin-top: 3px;">Thank you for your visit!</div>
+          <div style="font-size: 8.5px; margin-top: 4px; color: #555;">Pharmacist Sign: _________________</div>
+        </div>
+      </div>
+    `;
+  },
+
+  render58mmReceiptHtml(inv) {
+    const company = inv.company || {};
+    return `
+      <div class="thermal-58mm">
+        <div class="store-name">${company.trade_name || company.name || 'APEX PHARMACY'}</div>
+        <div class="store-meta">
+          ${company.city || ''} | Ph: ${company.phone || ''}<br>
+          DL: ${company.drug_license_no_1 || ''}
+        </div>
+        <div class="bill-meta">
+          <div>Inv: ${inv.invoice_number} | ${inv.invoice_date}</div>
+          <div>Cust: ${inv.customer_name}</div>
+          <div>Mode: ${inv.payment_mode}</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 45%;">Item</th>
+              <th style="width: 25%; text-align: right;">Qty</th>
+              <th style="width: 30%; text-align: right;">Amt</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${inv.items.map(it => `
+              <tr>
+                <td>${it.brand_name}</td>
+                <td style="text-align: right;">${it.unit || it.quantity}</td>
+                <td style="text-align: right;">${(it.line_total / 100).toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <div class="totals-box">
+          <div style="display: flex; justify-content: space-between;"><span>Subtotal:</span><span>${(inv.subtotal / 100).toFixed(2)}</span></div>
+          <div style="display: flex; justify-content: space-between;"><span>GST:</span><span>${(inv.total_tax / 100).toFixed(2)}</span></div>
+          <div class="grand-total-line"><span>TOTAL:</span><span>${MediStock.formatRupees(inv.grand_total)}</span></div>
+        </div>
+        <div class="receipt-footer">
+          <div>* GET WELL SOON *</div>
+          <div>Visit Again</div>
+        </div>
+      </div>
+    `;
+  },
+
+  renderA4InvoiceHtml(inv) {
+    const company = inv.company || {};
+    const words = MediStock.numberToWords(Math.round(inv.grand_total / 100));
+
+    // Group HSN tax breakdown
+    const hsnMap = {};
+    inv.items.forEach(it => {
+      const hsn = it.hsn_code || '3004';
+      if (!hsnMap[hsn]) {
+        hsnMap[hsn] = { hsn, taxable: 0, cgst: 0, sgst: 0, totalTax: 0, taxRate: it.tax_rate || 1200 };
+      }
+      hsnMap[hsn].taxable += (it.taxable_amount || 0);
+      hsnMap[hsn].cgst += (it.cgst_amount || 0);
+      hsnMap[hsn].sgst += (it.sgst_amount || 0);
+      hsnMap[hsn].totalTax += ((it.cgst_amount || 0) + (it.sgst_amount || 0));
+    });
+    const hsnRows = Object.values(hsnMap);
+
+    return `
+      <div class="a4-invoice">
+        <div class="invoice-banner">TAX INVOICE — ORIGINAL FOR RECIPIENT</div>
+
+        <div class="header-grid">
+          <div class="company-block">
+            <h2>${company.trade_name || company.name || 'APEX PHARMACY'}</h2>
+            <p><strong>Legal Name:</strong> ${company.name || 'Apex Pharmacy & Healthcare Pvt Ltd'}</p>
+            <p><strong>Address:</strong> ${company.address_line1 || 'Plot 42, Health City'}, ${company.city || 'Mumbai'}, ${company.pincode || '400001'}, ${company.state || 'Maharashtra'}</p>
+            <p><strong>Phone:</strong> ${company.phone || '9876543210'} | <strong>Email:</strong> ${company.email || 'billing@apexpharma.com'}</p>
+            <p><strong>Drug License No:</strong> 20B: ${company.drug_license_no_1 || 'MH-WZ-123456'} | 21B: ${company.drug_license_no_2 || 'MH-WZ-654321'}</p>
+            <p><strong>GSTIN:</strong> ${company.gstin || '27AABCU9603R1ZM'} | <strong>FSSAI:</strong> ${company.fssai_no || '10019022009876'}</p>
+          </div>
+          <div class="invoice-meta-block">
+            <div class="inv-num">INV: ${inv.invoice_number}</div>
+            <div><strong>Date:</strong> ${inv.invoice_date}</div>
+            <div><strong>Time:</strong> ${inv.invoice_time || '12:00 PM'}</div>
+            <div><strong>State:</strong> Maharashtra (Code: 27)</div>
+            <div><strong>Payment Mode:</strong> ${inv.payment_mode}</div>
+            <div><strong>Cashier:</strong> ${inv.operator_name || 'Rajesh Patel'}</div>
+          </div>
+        </div>
+
+        <div class="parties-grid">
+          <div>
+            <h4>Billed To (Customer / Patient)</h4>
+            <div><strong>Name:</strong> ${inv.customer_name}</div>
+            <div><strong>Phone:</strong> ${inv.customer_phone || 'Walk-in / Unregistered'}</div>
+            <div><strong>Address:</strong> ${inv.customer_address || 'Local Resident'}</div>
+            ${inv.customer_gstin ? `<div><strong>Customer GSTIN:</strong> ${inv.customer_gstin}</div>` : ''}
+          </div>
+          <div>
+            <h4>Prescription / Doctor Details</h4>
+            <div><strong>Doctor Name:</strong> ${inv.doctor_name || 'Self-Medication / OTC'}</div>
+            <div><strong>Reg. No:</strong> ${inv.doctor_reg_no || 'N/A'}</div>
+            <div><strong>Clinic/Hospital:</strong> ${inv.doctor_name ? 'Registered Clinic' : 'Counter Sale'}</div>
+          </div>
+        </div>
+
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th style="width: 4%;">#</th>
+              <th style="width: 25%; text-align: left;">Product Description</th>
+              <th style="width: 8%;">HSN</th>
+              <th style="width: 9%;">Batch</th>
+              <th style="width: 7%;">Exp</th>
+              <th style="width: 8%;">Qty / Unit</th>
+              <th style="width: 8%; text-align: right;">MRP (₹)</th>
+              <th style="width: 8%; text-align: right;">Rate (₹)</th>
+              <th style="width: 5%;">Disc%</th>
+              <th style="width: 9%; text-align: right;">Taxable (₹)</th>
+              <th style="width: 7%;">GST%</th>
+              <th style="width: 10%; text-align: right;">Total (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${inv.items.map((it, idx) => `
+              <tr>
+                <td style="text-align: center;">${idx + 1}</td>
+                <td>
+                  <strong>${it.brand_name}</strong>
+                  ${it.generic_name ? `<br><span style="font-size: 8.5px; color: #555;">${it.generic_name}</span>` : ''}
+                </td>
+                <td style="text-align: center;">${it.hsn_code || '3004'}</td>
+                <td style="text-align: center;">${it.batch_number}</td>
+                <td style="text-align: center;">${(it.expiry_date || '').slice(2, 7)}</td>
+                <td style="text-align: center;">${it.unit || it.quantity}</td>
+                <td style="text-align: right;">${(it.mrp / 100).toFixed(2)}</td>
+                <td style="text-align: right;">${(it.selling_rate / 100).toFixed(2)}</td>
+                <td style="text-align: center;">${it.discount_percent ? (it.discount_percent / 100).toFixed(1) + '%' : '-'}</td>
+                <td style="text-align: right;">${(it.taxable_amount / 100).toFixed(2)}</td>
+                <td style="text-align: center;">${((it.tax_rate || 1200) / 100).toFixed(0)}%</td>
+                <td style="text-align: right; font-weight: bold;">${(it.line_total / 100).toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <!-- HSN Tax Summary Table -->
+        <table class="tax-summary-table">
+          <thead>
+            <tr>
+              <th>HSN/SAC</th>
+              <th>Taxable Value (₹)</th>
+              <th>CGST Rate</th>
+              <th>CGST Amt (₹)</th>
+              <th>SGST Rate</th>
+              <th>SGST Amt (₹)</th>
+              <th>Total Tax (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${hsnRows.map(h => `
+              <tr>
+                <td style="text-align: center;">${h.hsn}</td>
+                <td>${(h.taxable / 100).toFixed(2)}</td>
+                <td style="text-align: center;">${(h.taxRate / 200).toFixed(1)}%</td>
+                <td>${(h.cgst / 100).toFixed(2)}</td>
+                <td style="text-align: center;">${(h.taxRate / 200).toFixed(1)}%</td>
+                <td>${(h.sgst / 100).toFixed(2)}</td>
+                <td style="font-weight: bold;">${(h.totalTax / 100).toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="footer-grid">
+          <div class="terms-block">
+            <div><strong>Amount in Words:</strong> <em>${words}</em></div>
+            <div class="bank-box">
+              <strong>Bank Details for Electronic Payments:</strong><br>
+              Bank: ${company.bank_name || 'HDFC Bank Ltd'} | A/c No: ${company.bank_account_no || '50200012345678'} | IFSC: ${company.bank_ifsc || 'HDFC0000123'} | UPI: ${company.upi_id || 'apex@upi'}
+            </div>
+            <div style="font-size: 8.5px; color: #555; margin-top: 5px;">
+              <strong>Terms & Conditions:</strong> 1. Goods once sold will be accepted back only in original packaging within 7 days. 2. Storage as per manufacturer guidelines. 3. Subject to local jurisdiction.
+            </div>
+          </div>
+
+          <div class="totals-summary">
+            <div class="totals-summary-row"><span>Subtotal:</span><span>${MediStock.formatRupees(inv.subtotal)}</span></div>
+            ${inv.total_discount > 0 ? `<div class="totals-summary-row"><span>Discount Savings:</span><span>-${MediStock.formatRupees(inv.total_discount)}</span></div>` : ''}
+            <div class="totals-summary-row"><span>Taxable Value:</span><span>${MediStock.formatRupees(inv.taxable_amount || (inv.subtotal - inv.total_discount))}</span></div>
+            <div class="totals-summary-row"><span>CGST:</span><span>${MediStock.formatRupees(inv.cgst_amount || (inv.total_tax / 2))}</span></div>
+            <div class="totals-summary-row"><span>SGST:</span><span>${MediStock.formatRupees(inv.sgst_amount || (inv.total_tax / 2))}</span></div>
+            ${inv.round_off !== 0 ? `<div class="totals-summary-row"><span>Round Off:</span><span>${(inv.round_off / 100).toFixed(2)}</span></div>` : ''}
+            <div class="totals-grand-row"><span>NET AMOUNT PAYABLE:</span><span>${MediStock.formatRupees(inv.grand_total)}</span></div>
+
+            <div class="signatory-box">
+              <div>For <strong>${company.trade_name || company.name || 'APEX PHARMACY'}</strong></div>
+              <div style="margin-top: 35px;">Authorised Signatory / Regd. Pharmacist</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  renderA5InvoiceHtml(inv) {
+    const company = inv.company || {};
+    return `
+      <div class="a5-invoice">
+        <div class="a5-header">
+          <div>
+            <div class="a5-store-name">${company.trade_name || company.name || 'APEX PHARMACY'}</div>
+            <div class="a5-store-meta">
+              ${company.address_line1 || ''}, ${company.city || ''} | Ph: ${company.phone || ''}<br>
+              DL: ${company.drug_license_no_1 || ''} | GSTIN: ${company.gstin || ''}
+            </div>
+          </div>
+          <div class="a5-bill-meta">
+            <div><strong>RETAIL TAX INVOICE</strong></div>
+            <div><strong>Bill No:</strong> ${inv.invoice_number}</div>
+            <div><strong>Date:</strong> ${inv.invoice_date}</div>
+            <div><strong>Mode:</strong> ${inv.payment_mode}</div>
+          </div>
+        </div>
+
+        <div class="a5-parties">
+          <div><strong>Customer:</strong> ${inv.customer_name} ${inv.customer_phone ? '(' + inv.customer_phone + ')' : ''}</div>
+          <div>${inv.doctor_name ? `<strong>Dr:</strong> ${inv.doctor_name}` : '<strong>OTC Counter Sale</strong>'}</div>
+        </div>
+
+        <table class="a5-table">
+          <thead>
+            <tr>
+              <th style="width: 5%;">#</th>
+              <th style="width: 38%; text-align: left;">Medicine / Description</th>
+              <th style="width: 14%;">Batch</th>
+              <th style="width: 10%;">Exp</th>
+              <th style="width: 11%;">Qty</th>
+              <th style="width: 10%; text-align: right;">Rate</th>
+              <th style="width: 12%; text-align: right;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${inv.items.map((it, idx) => `
+              <tr>
+                <td style="text-align: center;">${idx + 1}</td>
+                <td><strong>${it.brand_name}</strong></td>
+                <td style="text-align: center;">${it.batch_number}</td>
+                <td style="text-align: center;">${(it.expiry_date || '').slice(2, 7)}</td>
+                <td style="text-align: center;">${it.unit || it.quantity}</td>
+                <td style="text-align: right;">${(it.selling_rate / 100).toFixed(2)}</td>
+                <td style="text-align: right; font-weight: 600;">${(it.line_total / 100).toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="a5-footer">
+          <div style="font-size: 8.5px; color: #444;">
+            <div>* GET WELL SOON * Thank you for your visit!</div>
+            <div style="margin-top: 4px;">GST Included in Price: ${MediStock.formatRupees(inv.total_tax)}</div>
+          </div>
+          <div>
+            <div class="a5-total-row"><span>Subtotal:</span><span>${MediStock.formatRupees(inv.subtotal)}</span></div>
+            ${inv.total_discount > 0 ? `<div class="a5-total-row"><span>Discount:</span><span>-${MediStock.formatRupees(inv.total_discount)}</span></div>` : ''}
+            <div class="a5-grand-total"><span>NET PAYABLE:</span><span>${MediStock.formatRupees(inv.grand_total)}</span></div>
+            <div class="a5-sign-box">Pharmacist Signature: _____________</div>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
   async openPrintPreviewModal(invoiceId) {
     const inv = await window.api.sales.getInvoice(invoiceId);
     if (!inv) return;
 
-    const company = inv.company || {};
+    let activeFormat = localStorage.getItem('medistock_bill_format') || '80mm';
+
+    const getFormatHtml = (fmt) => {
+      switch (fmt) {
+        case 'a4': return this.renderA4InvoiceHtml(inv);
+        case 'a5': return this.renderA5InvoiceHtml(inv);
+        case '58mm': return this.render58mmReceiptHtml(inv);
+        case '80mm':
+        default:
+          return this.render80mmReceiptHtml(inv);
+      }
+    };
 
     const bodyHtml = `
-      <div style="display: flex; gap: 16px;">
-        <!-- Left: Print preview panel (80mm receipt style) -->
-        <div style="flex: 1; background: #fff; border: 1px solid #ccc; padding: 14px; font-family: monospace; font-size: 11px; max-height: 500px; overflow-y: auto;">
-          <div style="text-align: center; border-bottom: 1px dashed #666; padding-bottom: 6px; margin-bottom: 6px;">
-            <div style="font-size: 14px; font-weight: bold;">${company.trade_name || company.name || 'APEX PHARMACY'}</div>
-            <div>${company.address_line1 || ''}, ${company.city || ''}</div>
-            <div>Phone: ${company.phone || ''}</div>
-            <div>DL: ${company.drug_license_no_1 || ''} | GSTIN: ${company.gstin || ''}</div>
+      <div class="bill-preview-wrapper">
+        <div class="bill-format-toolbar">
+          <div class="bill-format-btn-group" id="bill-format-btn-group">
+            <button type="button" class="bill-format-btn ${activeFormat === '80mm' ? 'active' : ''}" data-format="80mm">🧾 80mm Thermal (POS)</button>
+            <button type="button" class="bill-format-btn ${activeFormat === 'a4' ? 'active' : ''}" data-format="a4">📄 A4 Full GST Tax Invoice</button>
+            <button type="button" class="bill-format-btn ${activeFormat === 'a5' ? 'active' : ''}" data-format="a5">📑 A5 Chemist Half-Page Bill</button>
+            <button type="button" class="bill-format-btn ${activeFormat === '58mm' ? 'active' : ''}" data-format="58mm">🧾 58mm Mini Slip</button>
           </div>
+          <label style="font-size: 11px; display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-muted);">
+            <input type="checkbox" id="chk-default-format" ${localStorage.getItem('medistock_bill_format') === activeFormat ? 'checked' : ''}>
+            Remember as default format
+          </label>
+        </div>
 
-          <div style="border-bottom: 1px dashed #666; padding-bottom: 4px; margin-bottom: 4px; font-size: 10.5px;">
-            <div><strong>Bill No:</strong> ${inv.invoice_number} | <strong>Date:</strong> ${inv.invoice_date}</div>
-            <div><strong>Customer:</strong> ${inv.customer_name} ${inv.customer_phone ? '(' + inv.customer_phone + ')' : ''}</div>
-            ${inv.doctor_name ? `<div><strong>Doctor:</strong> ${inv.doctor_name} ${inv.doctor_reg_no ? '[' + inv.doctor_reg_no + ']' : ''}</div>` : ''}
-            <div><strong>Mode:</strong> ${inv.payment_mode}</div>
-          </div>
-
-          <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 6px;">
-            <thead>
-              <tr style="border-bottom: 1px solid #000;">
-                <th style="text-align: left;">Item</th>
-                <th>Batch</th>
-                <th>Exp</th>
-                <th style="text-align: right;">Qty</th>
-                <th style="text-align: right;">Rate</th>
-                <th style="text-align: right;">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${inv.items
-                .map(
-                  (it) => `
-                <tr>
-                  <td>${it.brand_name}</td>
-                  <td style="text-align: center;">${it.batch_number}</td>
-                  <td style="text-align: center;">${it.expiry_date.slice(2, 7)}</td>
-                  <td style="text-align: right;">${it.unit || it.quantity}</td>
-                  <td style="text-align: right;">${(it.selling_rate / 100).toFixed(2)}</td>
-                  <td style="text-align: right;">${(it.line_total / 100).toFixed(2)}</td>
-                </tr>
-              `
-                )
-                .join('')}
-            </tbody>
-          </table>
-
-          <div style="border-top: 1px dashed #666; padding-top: 4px; font-size: 11px;">
-            <div style="display: flex; justify-content: space-between;"><span>Subtotal:</span><span>${MediStock.formatRupees(inv.subtotal)}</span></div>
-            <div style="display: flex; justify-content: space-between;"><span>Total Tax (CGST+SGST):</span><span>${MediStock.formatRupees(inv.total_tax)}</span></div>
-            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-top: 4px;">
-              <span>Grand Total:</span><span>${MediStock.formatRupees(inv.grand_total)}</span>
-            </div>
-          </div>
-
-          <div style="text-align: center; margin-top: 12px; font-size: 10px; border-top: 1px dashed #666; padding-top: 6px;">
-            <div>* GET WELL SOON *</div>
-            <div style="margin-top: 4px;">Thank you for your visit! Pharmacist Signature: ______________</div>
+        <div class="bill-preview-stage">
+          <div class="bill-preview-paper format-${activeFormat}" id="bill-paper-container">
+            ${getFormatHtml(activeFormat)}
           </div>
         </div>
       </div>
     `;
 
     const footerHtml = `
-      <button class="btn btn-primary" onclick="window.print()">Print Receipt (80mm / A4)</button>
-      <button class="btn btn-secondary" onclick="MediStock.closeModal()">Close</button>
+      <button class="btn btn-primary" id="btn-print-bill-now">🖨️ Print Invoice (Ctrl+P / Enter)</button>
+      <button class="btn btn-outline" onclick="MediStock.closeModal()">Close</button>
     `;
 
-    MediStock.showModal(`Invoice Preview — ${inv.invoice_number}`, bodyHtml, footerHtml, 'lg');
+    MediStock.showModal(`Invoice #${inv.invoice_number} — Print Preview & Formats`, bodyHtml, footerHtml, 'xl');
+
+    // Populate hidden print container immediately
+    const printContainer = document.getElementById('print-container');
+    if (printContainer) {
+      printContainer.className = `print-only format-${activeFormat}`;
+      printContainer.innerHTML = getFormatHtml(activeFormat);
+    }
+
+    // Switch formats dynamically
+    const formatButtons = document.querySelectorAll('#bill-format-btn-group .bill-format-btn');
+    const paperContainer = document.getElementById('bill-paper-container');
+    const chkDefault = document.getElementById('chk-default-format');
+
+    const switchFormat = (fmt) => {
+      activeFormat = fmt;
+      formatButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.format === fmt);
+      });
+      if (paperContainer) {
+        paperContainer.className = `bill-preview-paper format-${fmt}`;
+        paperContainer.innerHTML = getFormatHtml(fmt);
+      }
+      if (printContainer) {
+        printContainer.className = `print-only format-${fmt}`;
+        printContainer.innerHTML = getFormatHtml(fmt);
+      }
+      if (chkDefault && chkDefault.checked) {
+        localStorage.setItem('medistock_bill_format', fmt);
+      }
+    };
+
+    formatButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        switchFormat(btn.dataset.format);
+      });
+    });
+
+    if (chkDefault) {
+      chkDefault.addEventListener('change', () => {
+        if (chkDefault.checked) {
+          localStorage.setItem('medistock_bill_format', activeFormat);
+          MediStock.toast(`Default print format set to: ${activeFormat.toUpperCase()}`, 'info');
+        }
+      });
+    }
+
+    const btnPrint = document.getElementById('btn-print-bill-now');
+    if (btnPrint) {
+      btnPrint.addEventListener('click', () => {
+        window.print();
+      });
+    }
   },
 
   openCustomerModal() {
