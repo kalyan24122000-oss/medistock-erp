@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MediStock Technologies — SuperAdmin & Licensing Master Console</title>
+  <link rel="stylesheet" href="css/superadmin.css">
+</head>
+<body>
+  <div id="superadmin-app">
+    <!-- Topbar Header -->
+    <header id="sa-topbar">
+      <div class="sa-topbar-left">
+        <div class="sa-brand-badge">
+          <div class="sa-crown-icon">👑</div>
+          <div class="sa-brand-info">
+            <h1>MEDISTOCK TECHNOLOGIES</h1>
+            <span class="sa-role-tag">SUPERADMIN • SOFTWARE OWNER</span>
+          </div>
+        </div>
+        <div class="sa-server-status" id="sa-server-status-pill">
+          <span class="status-dot"></span>
+          <span id="sa-server-status-text">Connecting to Server...</span>
+        </div>
+      </div>
+
+      <div class="sa-topbar-right">
+        <div class="sa-clock" id="sa-live-clock">12:00:00 PM</div>
+        <div class="sa-admin-pill" id="sa-user-pill">
+          <span class="sa-avatar">👑</span>
+          <div class="sa-user-meta">
+            <span class="sa-user-name" id="sa-display-name">SuperAdmin</span>
+            <span class="sa-user-badge">Company Owner</span>
+          </div>
+          <button class="sa-logout-btn" id="btn-sa-logout" title="Sign Out of SuperAdmin Console">
+            🚪 Logout
+          </button>
+        </div>
+        <button class="btn btn-primary btn-sm" id="btn-quick-issue-license">
+          ➕ Issue License (Ctrl+N)
+        </button>
+      </div>
+    </header>
+
+    <!-- App Body Layout -->
+    <div id="sa-body">
+      <!-- Sidebar Navigation -->
+      <aside id="sa-sidebar">
+        <nav class="sa-nav">
+          <button class="sa-nav-item active" data-view="dashboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            Executive Dashboard
+          </button>
+          <button class="sa-nav-item" data-view="consumers">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            Consumer Pharmacies
+          </button>
+          <button class="sa-nav-item" data-view="generator">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+            Issue License Engine
+          </button>
+          <button class="sa-nav-item" data-view="hardware">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            Hardware & Telemetry
+          </button>
+          <button class="sa-nav-item" data-view="settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Owner & System Settings
+          </button>
+        </nav>
+
+        <div class="sa-sidebar-footer">
+          <div class="sa-owner-badge">
+            <div class="owner-avatar">RP</div>
+            <div class="owner-info">
+              <div class="owner-title">Rajesh Patel</div>
+              <div class="owner-sub">Founder & Software Owner</div>
+            </div>
+          </div>
+          <div class="sa-system-info">
+            MediStock Licensing Engine v1.0.0
+          </div>
+        </div>
+      </aside>
+
+      <!-- Dynamic View Container -->
+      <main id="sa-content">
+        <!-- Rendered by app.js -->
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal Container -->
+  <div id="sa-modal-container"></div>
+
+  <!-- Toast Notification Container -->
+  <div id="sa-toast-container"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

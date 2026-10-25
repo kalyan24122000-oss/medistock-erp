@@ -6,6 +6,7 @@
   "main": "main/index.js",
   "scripts": {
     "start": "electron .",
+    "superadmin": "electron superadmin-desktop/main.js",
     "test": "node --test tests/test-suite.test.js",
     "seed": "node database/seed.js",
     "backend": "node backend/server.js",
