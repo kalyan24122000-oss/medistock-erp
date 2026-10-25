@@ -12,7 +12,7 @@ window.SuperAdminApp = {
   stats: null,
 
   getBackendUrl() {
-    return localStorage.getItem('sa_backend_url') || 'http://localhost:5000';
+    return localStorage.getItem('sa_backend_url') || 'https://medistock-erp-01tu.onrender.com';
   },
 
   setBackendUrl(url) {
@@ -245,13 +245,6 @@ window.SuperAdminApp = {
           🔐 Unlock SuperAdmin Console
         </button>
 
-        <div style="margin-top: 12px; font-size: 11px; color: var(--text-muted); text-align: center;">
-          Server: <span id="sa-server-url-label" style="color: #38bdf8; font-family: monospace;">${this.getBackendUrl()}</span>
-          <button type="button" id="btn-edit-server-url" style="background: none; border: none; color: var(--primary); text-decoration: underline; cursor: pointer; margin-left: 6px; font-size: 11px;">
-            Edit URL
-          </button>
-        </div>
-
         <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 11px; font-weight: 700; color: var(--primary); text-align: center; text-transform: uppercase;">
           Proud Production of ByteSphere
         </div>
@@ -259,20 +252,6 @@ window.SuperAdminApp = {
     `;
 
     this.showModal('SuperAdmin Authentication', bodyHtml, '', 'sm');
-
-    const btnEditUrl = document.getElementById('btn-edit-server-url');
-    if (btnEditUrl) {
-      btnEditUrl.addEventListener('click', () => {
-        const current = this.getBackendUrl();
-        const nextUrl = prompt('Enter Licensing Backend Server URL (Local or Render Cloud):', current);
-        if (nextUrl && nextUrl.trim()) {
-          this.setBackendUrl(nextUrl.trim());
-          document.getElementById('sa-server-url-label').textContent = this.getBackendUrl();
-          this.checkServerStatus();
-          this.toast(`Backend URL updated to ${this.getBackendUrl()}`, 'info');
-        }
-      });
-    }
 
     const form = document.getElementById('sa-login-form');
     if (form) {
@@ -1070,7 +1049,7 @@ window.SuperAdminApp = {
       `Thank you for choosing PharmaDesk ERP & POS. Your software license has been successfully generated.\n\n` +
       `License Key: ${key}\n` +
       `Expiration Date: ${expiry}\n` +
-      `Server: http://localhost:5000\n\n` +
+      `Server: https://medistock-erp-01tu.onrender.com\n\n` +
       `Please enter this key on your computer to activate your counter.\n\n` +
       `Best regards,\n` +
       `SuperAdmin | ByteSphere Licensing Authority • PharmaDesk`;

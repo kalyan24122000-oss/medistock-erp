@@ -4,10 +4,11 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const http = require('http');
+const https = require('https');
 
 let mainWindow = null;
 const BACKEND_PORT = process.env.PORT || 5000;
-const BACKEND_URL = `http://localhost:${BACKEND_PORT}`;
+const BACKEND_URL = process.env.LICENSE_SERVER_URL || 'https://medistock-erp-01tu.onrender.com';
 
 // Ensure the licensing backend server is running
 async function ensureBackendServer() {
@@ -77,13 +78,15 @@ ipcMain.handle('superadmin:getBackendUrl', () => BACKEND_URL);
 
 ipcMain.handle('superadmin:checkBackendStatus', async () => {
   return new Promise((resolve) => {
-    const req = http.get(`${BACKEND_URL}/api/admin/overview`, (res) => {
+    const isHttps = BACKEND_URL.startsWith('https:');
+    const client = isHttps ? https : http;
+    const req = client.get(`${BACKEND_URL}/health`, (res) => {
       resolve({ online: true, statusCode: res.statusCode, url: BACKEND_URL });
     });
     req.on('error', (err) => {
       resolve({ online: false, error: err.message, url: BACKEND_URL });
     });
-    req.setTimeout(2000, () => {
+    req.setTimeout(5000, () => {
       req.destroy();
       resolve({ online: false, error: 'Connection timeout', url: BACKEND_URL });
     });

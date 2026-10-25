@@ -1,7 +1,9 @@
 // admin-panel/js/admin.js
 // Client logic for MediStock Licensing Authority & Remote Management Portal
 
-const API_BASE = (window.location.port === '5050' || !window.location.port) ? 'http://localhost:5000' : window.location.origin;
+const API_BASE = (window.location.protocol.startsWith('http') && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1')
+  ? window.location.origin
+  : 'https://medistock-erp-01tu.onrender.com';
 
 window.AdminApp = {
   currentAdmin: null,

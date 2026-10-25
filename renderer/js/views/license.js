@@ -47,14 +47,7 @@ window.MediStockViews.license = {
                      required autofocus>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Licensing Backend Server URL</label>
-              <input type="text" id="input-server-url" class="form-control font-mono"
-                     value="http://localhost:5000"
-                     style="font-size: 12px;">
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-lg" id="btn-submit-activate" style="width: 100%; margin-top: 6px;">
+            <button type="submit" class="btn btn-primary btn-lg" id="btn-submit-activate" style="width: 100%; margin-top: 10px;">
               🔑 Activate License Online
             </button>
           </form>
@@ -77,7 +70,7 @@ window.MediStockViews.license = {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const key = document.getElementById('input-license-key').value.trim();
-      const serverUrl = document.getElementById('input-server-url').value.trim() || 'http://localhost:5000';
+      const serverUrl = 'https://medistock-erp-01tu.onrender.com';
       const btn = document.getElementById('btn-submit-activate');
 
       btn.disabled = true;

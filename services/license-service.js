@@ -9,7 +9,7 @@ const url = require('url');
 const { getDatabase } = require('../database/db');
 const { validateKeyFormat, verifyLicenseSignature } = require('../backend/license-generator');
 
-const DEFAULT_SERVER_URL = process.env.LICENSE_SERVER_URL || 'http://localhost:5000';
+const DEFAULT_SERVER_URL = process.env.LICENSE_SERVER_URL || 'https://medistock-erp-01tu.onrender.com';
 
 /**
  * Initializes the local app_licenses table if it doesn't exist.
@@ -29,7 +29,7 @@ function initClientLicenseTable() {
       expires_at TEXT NOT NULL,
       last_verified_at TEXT,
       signature TEXT,
-      server_url TEXT DEFAULT 'http://localhost:5000',
+      server_url TEXT DEFAULT 'https://medistock-erp-01tu.onrender.com',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);

@@ -451,7 +451,7 @@ window.MediStockViews.settings = {
                   </tr>
                   <tr>
                     <th>Licensing Server</th>
-                    <td><code style="font-size: 11px;">${lic ? lic.serverUrl : 'http://localhost:5000'}</code></td>
+                    <td><code style="font-size: 11px;">${lic ? lic.serverUrl : 'https://medistock-erp-01tu.onrender.com'}</code></td>
                   </tr>
                 </tbody>
               </table>
