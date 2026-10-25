@@ -9,35 +9,30 @@ let mainWindow = null;
 const BACKEND_PORT = process.env.PORT || 5000;
 const BACKEND_URL = `http://localhost:${BACKEND_PORT}`;
 
-// Attempt to ensure the backend server is running
+// Ensure the licensing backend server is running
 async function ensureBackendServer() {
-  return new Promise((resolve) => {
-    const req = http.get(`${BACKEND_URL}/api/admin/overview`, (res) => {
-      console.log('[SuperAdmin Desktop] Backend server already running on port', BACKEND_PORT);
-      resolve(true);
+  try {
+    const { server, startServer } = require('../backend/server');
+    return new Promise((resolve) => {
+      // Listen directly
+      server.listen(BACKEND_PORT, () => {
+        console.log('[SuperAdmin Desktop] Started in-process licensing server on port', BACKEND_PORT);
+        resolve(true);
+      });
+      server.on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+          console.log('[SuperAdmin Desktop] External backend server already active on port', BACKEND_PORT);
+          resolve(true);
+        } else {
+          console.warn('[SuperAdmin Desktop] Backend server note:', err.message);
+          resolve(false);
+        }
+      });
     });
-
-    req.on('error', () => {
-      console.log('[SuperAdmin Desktop] Starting backend licensing server on port', BACKEND_PORT);
-      try {
-        const { startServer } = require('../backend/server');
-        startServer(BACKEND_PORT)
-          .then(() => resolve(true))
-          .catch((err) => {
-            console.warn('[SuperAdmin Desktop] Backend start note:', err.message);
-            resolve(false);
-          });
-      } catch (err) {
-        console.error('[SuperAdmin Desktop] Failed to load backend/server.js:', err);
-        resolve(false);
-      }
-    });
-
-    req.setTimeout(1500, () => {
-      req.destroy();
-      resolve(false);
-    });
-  });
+  } catch (err) {
+    console.error('[SuperAdmin Desktop] Failed to initialize backend server:', err);
+    return false;
+  }
 }
 
 function createWindow() {

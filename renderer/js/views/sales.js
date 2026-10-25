@@ -77,7 +77,7 @@ window.MediStockViews.sales = {
           <td class="text-right font-mono">${MediStock.formatRupees(inv.taxable_amount)}</td>
           <td class="text-right font-mono">${MediStock.formatRupees(inv.total_tax)}</td>
           <td class="text-right font-mono" style="font-weight: 700;">${MediStock.formatRupees(inv.grand_total)}</td>
-          <td style="font-size: 11px;">${inv.operator_name || 'Admin'}</td>
+          <td style="font-size: 11px;">${inv.operator_name || 'Pharmacist'}</td>
           <td class="text-center">
             <button class="btn btn-secondary btn-sm" onclick="MediStock.viewInvoiceDetails(${inv.id})">Reprint</button>
             <button class="btn btn-outline btn-sm" onclick="window.MediStockViews.sales.initiateReturn(${inv.id})">Return</button>

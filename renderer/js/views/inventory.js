@@ -219,7 +219,7 @@ window.MediStockViews.inventory = {
           ${m.new_qty >= m.previous_qty ? '+' : ''}${(m.new_qty - m.previous_qty).toFixed(1)}
         </td>
         <td class="text-right font-mono" style="font-weight: 700;">${m.new_qty}</td>
-        <td style="font-size: 11px;">${m.operator_name || 'Admin'}</td>
+        <td style="font-size: 11px;">${m.operator_name || 'Pharmacist'}</td>
         <td style="font-size: 11.5px; color: var(--text-muted);">${m.remarks || ''}</td>
       </tr>
     `

@@ -346,6 +346,31 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    // POST /api/admin/change-password
+    if (method === 'POST' && pathname === '/api/admin/change-password') {
+      const body = await parseJsonBody(req);
+      const { username, oldPassword, newPassword } = body;
+
+      if (!username || !oldPassword || !newPassword) {
+        return sendJson(res, 400, { success: false, message: 'Username, current password, and new password are required' });
+      }
+
+      if (newPassword.length < 6) {
+        return sendJson(res, 400, { success: false, message: 'New password must be at least 6 characters long' });
+      }
+
+      const admin = db.prepare('SELECT * FROM admins WHERE username = ?').get(username.trim());
+      if (!admin || !bcrypt.compareSync(oldPassword, admin.password_hash)) {
+        return sendJson(res, 401, { success: false, message: 'Current password is incorrect' });
+      }
+
+      const salt = bcrypt.genSaltSync(10);
+      const hash = bcrypt.hashSync(newPassword, salt);
+      db.prepare('UPDATE admins SET password_hash = ? WHERE id = ?').run(hash, admin.id);
+
+      return sendJson(res, 200, { success: true, message: 'Master password has been successfully updated!' });
+    }
+
     // GET /api/admin/overview
     if (method === 'GET' && pathname === '/api/admin/overview') {
       const total = db.prepare('SELECT COUNT(*) as count FROM licenses').get().count;

@@ -11,6 +11,16 @@ window.SuperAdminApp = {
   plans: [],
   stats: null,
 
+  getBackendUrl() {
+    return localStorage.getItem('sa_backend_url') || 'http://localhost:5000';
+  },
+
+  setBackendUrl(url) {
+    if (url) {
+      localStorage.setItem('sa_backend_url', url.trim().replace(/\/+$/, ''));
+    }
+  },
+
   async init() {
     this.initClock();
     this.bindNavigation();
@@ -34,6 +44,7 @@ window.SuperAdminApp = {
   async checkServerStatus() {
     const pill = document.getElementById('sa-server-status-pill');
     const text = document.getElementById('sa-server-status-text');
+    const backendUrl = this.getBackendUrl();
 
     try {
       if (window.superadminApi && window.superadminApi.checkBackendStatus) {
@@ -45,15 +56,16 @@ window.SuperAdminApp = {
         }
       }
       // Fallback direct fetch
-      const resp = await fetch(`${BACKEND_URL}/api/admin/overview`);
-      if (resp.ok) {
+      const resp = await fetch(`${backendUrl}/health`).catch(() => fetch(`${backendUrl}/api/admin/overview`));
+      if (resp && resp.ok) {
         pill.className = 'sa-server-status';
-        text.textContent = `Backend Online: ${BACKEND_URL}`;
+        text.textContent = `Backend Online: ${backendUrl}`;
         return true;
       }
+      throw new Error('Offline');
     } catch (e) {
       pill.className = 'sa-server-status offline';
-      text.textContent = 'Backend Offline (Retrying...)';
+      text.textContent = `Backend Offline (${backendUrl})`;
       return false;
     }
   },
@@ -69,12 +81,19 @@ window.SuperAdminApp = {
       options.body = JSON.stringify(data);
     }
 
-    const res = await fetch(`${BACKEND_URL}${endpoint}`, options);
-    const json = await res.json();
-    if (!res.ok) {
-      throw new Error(json.message || `Server returned HTTP ${res.status}`);
+    try {
+      const res = await fetch(`${this.getBackendUrl()}${endpoint}`, options);
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.message || `Server returned HTTP ${res.status}`);
+      }
+      return json;
+    } catch (err) {
+      if (err.message && err.message.toLowerCase().includes('failed to fetch')) {
+        throw new Error(`Cannot connect to Backend Server at ${this.getBackendUrl()}.\n\nEnsure backend is running (run 'npm run backend' in terminal) or verify your cloud URL.`);
+      }
+      throw err;
     }
-    return json;
   },
 
   toast(msg, type = 'info') {
@@ -156,6 +175,11 @@ window.SuperAdminApp = {
     if (btnLogout) {
       btnLogout.addEventListener('click', () => this.logout());
     }
+
+    const btnChangePwd = document.getElementById('btn-sa-change-pwd');
+    if (btnChangePwd) {
+      btnChangePwd.addEventListener('click', () => this.showChangePasswordModal());
+    }
   },
 
   bindShortcuts() {
@@ -221,6 +245,13 @@ window.SuperAdminApp = {
           🔐 Unlock SuperAdmin Console
         </button>
 
+        <div style="margin-top: 12px; font-size: 11px; color: var(--text-muted); text-align: center;">
+          Server: <span id="sa-server-url-label" style="color: #38bdf8; font-family: monospace;">${this.getBackendUrl()}</span>
+          <button type="button" id="btn-edit-server-url" style="background: none; border: none; color: var(--primary); text-decoration: underline; cursor: pointer; margin-left: 6px; font-size: 11px;">
+            Edit URL
+          </button>
+        </div>
+
         <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 11px; font-weight: 700; color: var(--primary); text-align: center; text-transform: uppercase;">
           Proud Production of ByteSphere
         </div>
@@ -228,6 +259,20 @@ window.SuperAdminApp = {
     `;
 
     this.showModal('SuperAdmin Authentication', bodyHtml, '', 'sm');
+
+    const btnEditUrl = document.getElementById('btn-edit-server-url');
+    if (btnEditUrl) {
+      btnEditUrl.addEventListener('click', () => {
+        const current = this.getBackendUrl();
+        const nextUrl = prompt('Enter Licensing Backend Server URL (Local or Render Cloud):', current);
+        if (nextUrl && nextUrl.trim()) {
+          this.setBackendUrl(nextUrl.trim());
+          document.getElementById('sa-server-url-label').textContent = this.getBackendUrl();
+          this.checkServerStatus();
+          this.toast(`Backend URL updated to ${this.getBackendUrl()}`, 'info');
+        }
+      });
+    }
 
     const form = document.getElementById('sa-login-form');
     if (form) {
@@ -257,6 +302,77 @@ window.SuperAdminApp = {
           this.toast(err.message || 'Login failed', 'error');
           btn.disabled = false;
           btn.textContent = '🔐 Unlock SuperAdmin Console';
+        }
+      });
+    }
+  },
+
+  showChangePasswordModal() {
+    const username = this.currentAdmin ? this.currentAdmin.username : 'superadmin';
+    const bodyHtml = `
+      <form id="sa-change-pwd-form">
+        <div style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 14px;">
+          Update master password for SuperAdmin account: <strong style="color: #38bdf8;">${username}</strong>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Current Master Password</label>
+          <input type="password" id="sa-pwd-old" class="form-control" placeholder="Enter current master password" required autofocus>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">New Master Password</label>
+          <input type="password" id="sa-pwd-new" class="form-control" placeholder="Minimum 6 characters" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Confirm New Password</label>
+          <input type="password" id="sa-pwd-confirm" class="form-control" placeholder="Re-enter new password" required>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 18px;">
+          <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="SuperAdminApp.closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-gold" style="flex: 1;" id="btn-submit-pwd-change">💾 Save New Password</button>
+        </div>
+      </form>
+    `;
+
+    this.showModal('Change Master Password', bodyHtml, '', 'sm');
+
+    const form = document.getElementById('sa-change-pwd-form');
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const oldPassword = document.getElementById('sa-pwd-old').value;
+        const newPassword = document.getElementById('sa-pwd-new').value;
+        const confirmPassword = document.getElementById('sa-pwd-confirm').value;
+        const btn = document.getElementById('btn-submit-pwd-change');
+
+        if (newPassword !== confirmPassword) {
+          return this.toast('New passwords do not match!', 'error');
+        }
+
+        if (newPassword.length < 6) {
+          return this.toast('Password must be at least 6 characters long', 'error');
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Updating...';
+
+        try {
+          const res = await this.apiRequest('/api/admin/change-password', 'POST', {
+            username,
+            oldPassword,
+            newPassword
+          });
+          if (res.success) {
+            this.toast('Master password changed successfully!', 'success');
+            this.closeModal();
+          }
+        } catch (err) {
+          this.toast(err.message || 'Failed to update password', 'error');
+          btn.disabled = false;
+          btn.textContent = '💾 Save New Password';
         }
       });
     }

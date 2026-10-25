@@ -44,7 +44,7 @@ window.MediStockViews.users = {
               </tr>
             </thead>
             <tbody>
-              <tr><td><strong>Administrator / Owner</strong></td><td>Full unrestricted access across billing, purchases, double-entry accounts, settings, backups, and user management.</td></tr>
+              <tr><td><strong>Store Manager / Owner</strong></td><td>Full unrestricted access across billing, purchases, double-entry accounts, settings, backups, and user management.</td></tr>
               <tr><td><strong>Pharmacist</strong></td><td>Dispensing, Schedule H/H1 registers verification, physical stock inspection, and customer counseling.</td></tr>
               <tr><td><strong>Billing Operator / Cashier</strong></td><td>High-speed retail POS billing, receipts, customer lookups. Restricted from price overrides or backdating.</td></tr>
               <tr><td><strong>Purchase Manager</strong></td><td>Purchase orders, supplier bills entry, goods receipt, rate comparison.</td></tr>

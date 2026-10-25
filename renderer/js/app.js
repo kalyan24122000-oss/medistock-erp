@@ -4,9 +4,9 @@
 window.MediStock = {
   currentUser: {
     id: 1,
-    username: 'admin',
+    username: 'pharmacist',
     fullName: 'Rajesh Patel',
-    roleName: 'Administrator',
+    roleName: 'Store Manager',
   },
   company: null,
   activeView: 'dashboard',
@@ -145,7 +145,7 @@ window.MediStock = {
     const container = document.getElementById('view-container');
     if (!container) return;
 
-    // Sub-views of Administration cleanly route to the 15th tab (settings)
+    // Sub-views of Settings & Preferences cleanly route to the 15th tab (settings)
     if (viewName === 'backup' || viewName === 'users' || viewName === 'about') {
       const targetSubTab = viewName === 'about' ? 'shortcuts' : viewName;
       return this.navigate('settings', targetSubTab);

@@ -13,8 +13,8 @@ window.MediStockViews.settings = {
       <div class="card" style="margin-bottom: 12px; padding: 12px 16px;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <div>
-            <h2 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0;">⚙️ System Settings & Administration</h2>
-            <p style="font-size: 11.5px; color: #64748b; margin: 2px 0 0;">Manage pharmacy profile, users, safe SQLite backups, keyboard shortcuts, and 15 navigation tabs.</p>
+            <h2 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0;">⚙️ System Settings & Store Preferences</h2>
+            <p style="font-size: 11.5px; color: #64748b; margin: 2px 0 0;">Manage pharmacy profile, store staff, safe SQLite backups, keyboard shortcuts, and UI preferences.</p>
           </div>
           <div style="display: flex; gap: 6px; flex-wrap: wrap;" id="settings-tab-buttons">
             <button class="btn btn-sm ${this.activeTab === 'profile' ? 'btn-primary' : 'btn-outline'}" data-tab="profile">🏢 Company Profile</button>
@@ -215,7 +215,7 @@ window.MediStockViews.settings = {
       { num: 12, id: 'accounts', name: 'Double-Entry Accounts', section: 'Stakeholders & Books', desc: 'Chart of Accounts, Journal Vouchers, strictly balanced Trial Balance, P&L' },
       { num: 13, id: 'gst', name: 'GST & Tax Reports', section: 'Stakeholders & Books', desc: 'GSTR-1 outward supplies (B2B/B2C), GSTR-3B tax offset, HSN summary' },
       { num: 14, id: 'reports', name: 'Analytics & Reports', section: 'Stakeholders & Books', desc: 'Fast/slow moving medicines, auto-reorder recommendations, gross profit' },
-      { num: 15, id: 'settings', name: 'Settings & Administration', section: 'Administration', desc: 'All-in-one hub: Pharmacy Profile, Users, SQLite Hot Backups, and Shortcuts' }
+      { num: 15, id: 'settings', name: 'Settings & Preferences', section: 'System', desc: 'All-in-one hub: Pharmacy Profile, Store Staff, SQLite Hot Backups, and Shortcuts' }
     ];
 
     subContainer.innerHTML = `
@@ -225,7 +225,7 @@ window.MediStockViews.settings = {
           <span class="badge success" style="font-size: 12px; padding: 4px 10px;">Configured to Exactly 15 Navigation Tabs</span>
         </div>
         <p style="font-size: 12.5px; color: #475569; margin-bottom: 14px;">
-          The PharmaDesk ERP sidebar navigation has been streamlined to <strong>exactly 15 focused tabs</strong>, grouping administrative utilities (Profile, Users, Backups, and Shortcuts) cleanly under Tab 15.
+          The PharmaDesk ERP sidebar navigation has been streamlined to <strong>exactly 15 focused tabs</strong>, grouping store configuration utilities (Profile, Staff, Backups, and Shortcuts) cleanly under Tab 15.
         </p>
 
         <div class="table-container">
@@ -471,13 +471,8 @@ window.MediStockViews.settings = {
                   📋 Copy Hardware ID
                 </button>
               </div>
-              <div style="font-size: 11px; color: #64748b; margin-top: 10px;">
-                💡 To transfer this license to another computer, reset the bound HWID in the <strong>Admin Portal</strong> first.
-              </div>
-              <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #e2e8f0;">
-                <a href="http://localhost:5000/admin" target="_blank" class="btn btn-outline btn-sm" style="width: 100%; text-align: center; text-decoration: none; display: block;">
-                  🌐 Open Admin Portal (Port 5000)
-                </a>
+              <div style="font-size: 11px; color: #64748b; margin-top: 10px; line-height: 1.4;">
+                💡 To transfer this license to another computer or renew, contact your ByteSphere licensing representative with this Hardware ID.
               </div>
             </div>
           </div>

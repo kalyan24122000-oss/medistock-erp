@@ -11,6 +11,7 @@
     "seed": "node database/seed.js",
     "backend": "node backend/server.js",
     "admin": "node admin-panel/server.js",
+    "change-password": "node backend/reset-password.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --win nsis"
   },
