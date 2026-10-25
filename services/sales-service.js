@@ -18,7 +18,7 @@ function calculateLineItem(item) {
   const conv = Math.max(1, Number(item.conversionRatio) || 10);
   const strips = Number(item.strips !== undefined ? item.strips : item.quantity) || 0;
   const looseTabs = Number(item.looseTabs) || 0;
-  const stripRate = Number(item.sellingRate) || 0;
+  const stripRate = Number(item.sellingRate !== undefined ? item.sellingRate : item.stripRate) || 0;
   const usp = Number(item.usp) || Math.round(stripRate / conv);
   const discPercent = Math.max(0, Math.min(100, Number(item.discountPercent) || 0));
   const taxRateBp = Number(item.taxRate) || 1200; // 12% default
@@ -59,6 +59,7 @@ function calculateLineItem(item) {
     effectiveQty,
     usp,
     stripRate,
+    sellingRate: stripRate,
   };
 }
 
@@ -75,14 +76,16 @@ function calculateInvoiceTotals(items, invoiceDiscountPercent = 0, invoiceDiscou
   let totalQty = 0;
 
   for (const it of items) {
-    const calc = it.lineTotal !== undefined ? it : calculateLineItem(it);
-    subtotal += calc.gross;
-    totalLineDiscounts += calc.lineDiscount;
-    taxableAmount += calc.taxable;
-    cgstAmount += calc.cgst;
-    sgstAmount += calc.sgst;
-    igstAmount += calc.igst;
-    totalQty += Number(it.quantity) || 0;
+    const hasCalculated = it && it.gross !== undefined && (it.taxable !== undefined || it.taxableAmount !== undefined);
+    const calc = hasCalculated ? it : calculateLineItem(it);
+
+    subtotal += (Number(calc.gross) || 0);
+    totalLineDiscounts += (Number(calc.lineDiscount) || 0);
+    taxableAmount += (Number(calc.taxable !== undefined ? calc.taxable : calc.taxableAmount) || 0);
+    cgstAmount += (Number(calc.cgst !== undefined ? calc.cgst : calc.cgstAmount) || 0);
+    sgstAmount += (Number(calc.sgst !== undefined ? calc.sgst : calc.sgstAmount) || 0);
+    igstAmount += (Number(calc.igst !== undefined ? calc.igst : calc.igstAmount) || 0);
+    totalQty += Number(it.quantity !== undefined ? it.quantity : calc.effectiveQty) || 0;
   }
 
   // Header level discount
@@ -102,16 +105,16 @@ function calculateInvoiceTotals(items, invoiceDiscountPercent = 0, invoiceDiscou
   return {
     totalItems: items.length,
     totalQty,
-    subtotal,
-    discountAmount: totalLineDiscounts + headerDiscount,
-    discountPercent: invoiceDiscountPercent,
-    taxableAmount: netTaxable,
-    cgstAmount,
-    sgstAmount,
-    igstAmount,
-    totalTax,
-    roundOff,
-    grandTotal,
+    subtotal: Math.round(subtotal) || 0,
+    discountAmount: Math.round(totalLineDiscounts + headerDiscount) || 0,
+    discountPercent: Number(invoiceDiscountPercent) || 0,
+    taxableAmount: Math.round(netTaxable) || 0,
+    cgstAmount: Math.round(cgstAmount) || 0,
+    sgstAmount: Math.round(sgstAmount) || 0,
+    igstAmount: Math.round(igstAmount) || 0,
+    totalTax: Math.round(totalTax) || 0,
+    roundOff: Math.round(roundOff) || 0,
+    grandTotal: Math.round(grandTotal) || 0,
   };
 }
 
@@ -316,7 +319,7 @@ function createSalesInvoice(invoiceData) {
       )
     `).run(
       jVoucherNum, invoiceDate, invoiceNumber, `Sales Invoice ${invoiceNumber} - ${customerName}`,
-      branchId || null, financialYearId || null, totals.grandTotal, userId || null
+      branchId || null, financialYearId || null, Number(totals.grandTotal) || 0, userId || null
     );
     const journalId = jRes.lastInsertRowid;
 

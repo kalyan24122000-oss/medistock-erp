@@ -412,3 +412,58 @@ test('12. Multi-UI Themes & Bill Print Formats Configuration', () => {
   assert.equal(numberToWordsTest(125000), 'Rupees One Lakh Twenty Five Thousand Only');
 });
 
+test('13. POS Retail Invoice with Custom Loose Tablets & Journal Entry Verification', () => {
+  const db = getDatabase(TEST_DB_PATH);
+  const batches = getProductBatches(1, false);
+  const b = batches[0];
+
+  // Simulating renderer payload with strips + loose tablets
+  const invRes = createSalesInvoice({
+    invoiceType: 'RETAIL',
+    customerName: 'Loose Tablet Customer',
+    customerPhone: '9876543210',
+    paymentMode: 'CASH',
+    items: [
+      {
+        productId: b.product_id,
+        brandName: b.brand_name,
+        batchId: b.id,
+        batchNumber: b.batch_number,
+        expiryDate: b.expiry_date,
+        conversionRatio: 15,
+        strips: 1,
+        looseTabs: 5,
+        usp: 200,
+        quantity: 1 + (5 / 15),
+        mrp: b.mrp,
+        sellingRate: 3000,
+        discountPercent: 0,
+        taxRate: 1200,
+        gross: 4000,
+        lineDiscount: 0,
+        taxable: 4000,
+        taxableAmount: 4000,
+        cgst: 240,
+        cgstAmount: 240,
+        sgst: 240,
+        sgstAmount: 240,
+        totalTax: 480,
+        lineTotal: 4480,
+      },
+    ],
+  });
+
+  assert.ok(invRes.success, 'Invoice should post successfully');
+  assert.ok(invRes.grandTotal > 0, 'Grand total must be positive integer paise');
+
+  // Verify journal entry exists with valid total_amount
+  const journal = db.prepare(`
+    SELECT total_amount FROM journal_entries WHERE reference_id = ?
+  `).get(invRes.invoiceNumber);
+
+  assert.ok(journal, 'Journal entry must be recorded');
+  assert.equal(journal.total_amount, invRes.grandTotal, 'Journal total_amount must match invoice grand total');
+  assert.ok(!isNaN(journal.total_amount), 'Journal total_amount must not be NaN');
+});
+
+

@@ -790,10 +790,17 @@ window.MediStockViews.billing = {
           sellingRate: it.sellingRate,
           discountPercent: it.discountPercent,
           taxRate: it.taxRate,
+          gross: c.gross,
+          lineDiscount: c.lineDiscount,
+          taxable: c.taxable,
           taxableAmount: c.taxable,
+          cgst: c.cgst,
           cgstAmount: c.cgst,
+          sgst: c.sgst,
           sgstAmount: c.sgst,
+          igst: 0,
           igstAmount: 0,
+          totalTax: c.totalTax,
           lineTotal: c.lineTotal,
         };
       });
