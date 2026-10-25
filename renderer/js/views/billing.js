@@ -889,6 +889,7 @@ window.MediStockViews.billing = {
           <div>*** GET WELL SOON ***</div>
           <div style="margin-top: 3px;">Thank you for your visit!</div>
           <div style="font-size: 8.5px; margin-top: 4px; color: #555;">Pharmacist Sign: _________________</div>
+          <div style="font-size: 7.5px; margin-top: 5px; color: #777; font-weight: bold;">Proud Production of ByteSphere • PharmaDesk</div>
         </div>
       </div>
     `;
@@ -934,6 +935,7 @@ window.MediStockViews.billing = {
         <div class="receipt-footer">
           <div>* GET WELL SOON *</div>
           <div>Visit Again</div>
+          <div style="font-size: 7px; margin-top: 4px; color: #777; font-weight: bold;">Proud Production of ByteSphere</div>
         </div>
       </div>
     `;
@@ -1091,6 +1093,9 @@ window.MediStockViews.billing = {
             </div>
           </div>
         </div>
+        <div style="margin-top: 15px; padding-top: 8px; border-top: 1px dashed #cbd5e1; font-size: 8px; color: #64748b; text-align: center; letter-spacing: 0.5px;">
+          Proud Production of ByteSphere • PharmaDesk ERP & POS
+        </div>
       </div>
     `;
   },
@@ -1151,6 +1156,7 @@ window.MediStockViews.billing = {
           <div style="font-size: 8.5px; color: #444;">
             <div>* GET WELL SOON * Thank you for your visit!</div>
             <div style="margin-top: 4px;">GST Included in Price: ${MediStock.formatRupees(inv.total_tax)}</div>
+            <div style="margin-top: 8px; font-size: 7.5px; color: #64748b;">Proud Production of ByteSphere • PharmaDesk</div>
           </div>
           <div>
             <div class="a5-total-row"><span>Subtotal:</span><span>${MediStock.formatRupees(inv.subtotal)}</span></div>

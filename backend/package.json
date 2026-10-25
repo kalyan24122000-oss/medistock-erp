@@ -1,7 +1,7 @@
 {
-  "name": "medistock-license-backend",
+  "name": "pharmadesk-license-backend",
   "version": "1.0.0",
-  "description": "MediStock ERP Central Licensing & Machine Verification REST API Server",
+  "description": "PharmaDesk Central Licensing & Remote Administration REST API Server • ByteSphere",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -12,15 +12,17 @@
     "pharmacy-erp",
     "activation",
     "hwid",
-    "rest-api"
+    "rest-api",
+    "pharmadesk",
+    "bytesphere"
   ],
-  "author": "MediStock Technologies",
+  "author": "ByteSphere",
   "license": "Proprietary",
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^13.0.3"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.0.0"
   }
 }

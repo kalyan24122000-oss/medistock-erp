@@ -202,27 +202,27 @@ window.SuperAdminApp = {
     const bodyHtml = `
       <form id="sa-login-form">
         <div style="text-align: center; margin-bottom: 20px;">
-          <div style="font-size: 38px;">👑</div>
-          <h2 style="font-size: 18px; font-weight: 800; color: #ffffff; margin-top: 6px;">Company Owner SuperAdmin Login</h2>
-          <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">MediStock Technologies Master Licensing Console</p>
+          <img src="assets/logo.png" style="max-width: 180px; margin: 0 auto 12px; display: block; background: #ffffff; border-radius: 8px; padding: 4px;">
+          <h2 style="font-size: 18px; font-weight: 800; color: #ffffff; margin-top: 6px;">SuperAdmin Console Login</h2>
+          <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">PharmaDesk Technologies • Licensing Authority</p>
         </div>
 
         <div class="form-group">
           <label class="form-label">SuperAdmin Username</label>
-          <input type="text" id="sa-login-user" class="form-control" value="superadmin" required autofocus>
+          <input type="text" id="sa-login-user" class="form-control" placeholder="Enter SuperAdmin username" required autofocus>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Master Passcode / Password</label>
-          <input type="password" id="sa-login-pass" class="form-control" value="masteradmin123" required>
+          <label class="form-label">Master Password</label>
+          <input type="password" id="sa-login-pass" class="form-control" placeholder="Enter master password" required>
         </div>
 
         <button type="submit" class="btn btn-gold btn-lg" style="width: 100%; margin-top: 10px;" id="btn-sa-login-submit">
           🔐 Unlock SuperAdmin Console
         </button>
 
-        <div style="margin-top: 14px; font-size: 11px; color: var(--text-dim); text-align: center;">
-          Default Master Credentials: <strong>superadmin</strong> / <strong>masteradmin123</strong>
+        <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 11px; font-weight: 700; color: var(--primary); text-align: center; text-transform: uppercase;">
+          Proud Production of ByteSphere
         </div>
       </form>
     `;
@@ -878,9 +878,10 @@ window.SuperAdminApp = {
     const bodyHtml = `
       <div class="license-certificate" id="printable-cert-card">
         <div class="cert-header">
-          <div class="cert-brand-logo">MEDISTOCK TECHNOLOGIES</div>
+          <img src="assets/logo.png" style="height: 50px; margin: 0 auto 8px; display: block;">
+          <div class="cert-brand-logo">PHARMADESK TECHNOLOGIES</div>
           <div class="cert-title">Official Pharmacy Software License Certificate</div>
-          <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Issued by Central Licensing & Machine Verification Authority</div>
+          <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Issued by Central Licensing & Machine Verification Authority • ByteSphere</div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; font-size: 13px;">
@@ -908,8 +909,8 @@ window.SuperAdminApp = {
         </div>
 
         <div class="cert-seal">
-          <div>MEDISTOCK</div>
-          <div style="font-size: 7px;">LICENSED</div>
+          <div>PHARMADESK</div>
+          <div style="font-size: 7px;">BYTESPHERE</div>
           <div>OFFICIAL</div>
         </div>
       </div>
@@ -931,32 +932,32 @@ window.SuperAdminApp = {
   },
 
   copyWhatsAppTemplate(key, pharmacy, expiry) {
-    const text = `🏥 *MEDISTOCK ERP SOFTWARE LICENSE ACTIVATION*\n\n` +
+    const text = `🏥 *PHARMADESK ERP & POS — SOFTWARE LICENSE ACTIVATION*\n\n` +
       `Dear *${pharmacy}*,\n` +
-      `Your official pharmacy management software license has been issued by MediStock Technologies.\n\n` +
+      `Your official pharmacy management software license has been issued by ByteSphere.\n\n` +
       `🔑 *License Key:* ${key}\n` +
       `📅 *Valid Until:* ${expiry}\n` +
       `🖥️ *Binding:* 1 Primary Counter PC (HWID Protected)\n\n` +
       `*How to activate:*\n` +
-      `1. Open MediStock ERP on your billing computer\n` +
+      `1. Open PharmaDesk on your billing computer\n` +
       `2. Paste your License Key\n` +
       `3. Click "Activate License Online"\n\n` +
       `For customer support & training, contact: +91 98200 98200\n` +
-      `_MediStock Technologies — Inspiring Indian Pharmacy Excellence_`;
+      `_PharmaDesk — Proud Production of ByteSphere_`;
 
     this.copyToClipboard(text, 'WhatsApp Delivery message copied!');
   },
 
   copyEmailTemplate(key, pharmacy, expiry) {
-    const text = `Subject: MediStock ERP — Official License Key for ${pharmacy}\n\n` +
+    const text = `Subject: PharmaDesk ERP — Official License Key for ${pharmacy}\n\n` +
       `Dear ${pharmacy} Team,\n\n` +
-      `Thank you for choosing MediStock ERP. Your software license has been successfully generated.\n\n` +
+      `Thank you for choosing PharmaDesk ERP & POS. Your software license has been successfully generated.\n\n` +
       `License Key: ${key}\n` +
       `Expiration Date: ${expiry}\n` +
       `Server: http://localhost:5000\n\n` +
       `Please enter this key on your computer to activate your counter.\n\n` +
       `Best regards,\n` +
-      `SuperAdmin | MediStock Technologies Global Licensing Authority`;
+      `SuperAdmin | ByteSphere Licensing Authority • PharmaDesk`;
 
     this.copyToClipboard(text, 'Email Template copied!');
   },

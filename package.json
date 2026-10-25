@@ -1,8 +1,8 @@
 {
-  "name": "medistock-erp",
-  "productName": "MediStock ERP",
+  "name": "pharmadesk-erp",
+  "productName": "PharmaDesk",
   "version": "1.0.0",
-  "description": "Complete Pharmacy Management Desktop ERP — Inspired by MARG ERP workflows with modern architecture",
+  "description": "PharmaDesk — Complete Pharmacy Management Desktop ERP & POS • Proud Production of ByteSphere",
   "main": "main/index.js",
   "scripts": {
     "start": "electron .",
@@ -20,11 +20,12 @@
     "billing",
     "inventory",
     "pos",
-    "marg",
+    "pharmadesk",
+    "bytesphere",
     "sqlite",
     "electron"
   ],
-  "author": "MediStock Systems",
+  "author": "ByteSphere",
   "license": "Proprietary",
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -36,13 +37,14 @@
     "electron-builder": "^26.7.0"
   },
   "build": {
-    "appId": "com.medistock.erp",
-    "productName": "MediStock ERP",
+    "appId": "com.bytesphere.pharmadesk",
+    "productName": "PharmaDesk",
     "npmRebuild": false,
     "directories": {
       "output": "dist"
     },
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         {
           "target": "nsis",
@@ -57,13 +59,16 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "MediStock ERP"
+      "shortcutName": "PharmaDesk",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
     },
     "files": [
       "main/**/*",
       "renderer/**/*",
       "database/**/*",
       "services/**/*",
+      "build/icon.ico",
       "package.json"
     ],
     "asarUnpack": [

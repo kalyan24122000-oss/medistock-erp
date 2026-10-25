@@ -17,15 +17,15 @@ window.MediStockViews.license = {
         <div class="auth-card-panel license-card-panel">
           <div class="auth-header">
             <div class="auth-brand-logo">
-              <div class="auth-logo-badge">M</div>
+              <img src="assets/logo.png" class="auth-header-logo" alt="PharmaDesk">
             </div>
-            <h2 class="auth-title">MediStock ERP — Software Activation</h2>
-            <p class="auth-subtitle">Windows Desktop Pharmacy ERP • Hardware Fingerprint Verification</p>
+            <h2 class="auth-title">PharmaDesk — Software Activation</h2>
+            <p class="auth-subtitle">Pharmacy Management ERP & POS • Machine Hardware Binding</p>
           </div>
 
           <!-- Machine Fingerprint Card -->
           <div class="hwid-info-box">
-            <div class="hwid-label">This Machine's Unique Hardware ID (HWID):</div>
+            <div class="hwid-label">This Computer's Unique Hardware ID (HWID):</div>
             <div class="hwid-val-row">
               <span class="hwid-code" id="display-hwid">${hwid}</span>
               <button type="button" class="btn btn-outline btn-sm" id="btn-copy-hwid" title="Copy Hardware ID to Clipboard">
@@ -40,10 +40,10 @@ window.MediStockViews.license = {
           <!-- License Activation Form -->
           <form id="license-activation-form" style="margin-top: 16px;">
             <div class="form-group">
-              <label class="form-label">Customer License Key *</label>
+              <label class="form-label">Software License Key *</label>
               <input type="text" id="input-license-key" class="form-control font-mono"
-                     placeholder="e.g. MEDI-APEX-2026-PRO9-8877"
-                     style="font-size: 14px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;"
+                     placeholder="Enter your license key (e.g. MEDI-XXXX-YYYY-ZZZZ-CCCC)"
+                     style="font-size: 13.5px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;"
                      required autofocus>
             </div>
 
@@ -59,25 +59,8 @@ window.MediStockViews.license = {
             </button>
           </form>
 
-          <!-- Fast Presets for Testing & Admin Access -->
-          <div class="auth-presets-box">
-            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase;">
-              Quick Activation Keys & Remote Admin:
-            </div>
-            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-              <button type="button" class="btn btn-outline btn-sm" id="btn-preset-apex">
-                🏢 Use Apex Pro Key (1 Year)
-              </button>
-              <button type="button" class="btn btn-outline btn-sm" id="btn-preset-trial">
-                ⏳ Use 14-Day Free Trial Key
-              </button>
-            </div>
-            <div style="margin-top: 12px; font-size: 11.5px; color: #475569; display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
-              <span>Need custom license keys?</span>
-              <a href="#" id="link-open-admin-portal" style="color: var(--primary); font-weight: 600; text-decoration: none;">
-                Open Admin Portal (Port 5000) &rarr;
-              </a>
-            </div>
+          <div class="auth-card-footer">
+            Proud Production of ByteSphere
           </div>
         </div>
       </div>
@@ -87,20 +70,6 @@ window.MediStockViews.license = {
     document.getElementById('btn-copy-hwid').addEventListener('click', () => {
       navigator.clipboard.writeText(hwid);
       MediStock.toast('Hardware ID copied to clipboard!', 'success');
-    });
-
-    // Preset buttons
-    document.getElementById('btn-preset-apex').addEventListener('click', () => {
-      document.getElementById('input-license-key').value = 'MEDI-APEX-2026-PRO9-8877';
-    });
-
-    document.getElementById('btn-preset-trial').addEventListener('click', () => {
-      document.getElementById('input-license-key').value = 'MEDI-DEMO-2026-TRIL-1400';
-    });
-
-    document.getElementById('link-open-admin-portal').addEventListener('click', (e) => {
-      e.preventDefault();
-      MediStock.toast('Admin Portal running at http://localhost:5000/admin', 'info');
     });
 
     // Handle form submit

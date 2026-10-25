@@ -9,12 +9,18 @@ window.MediStockViews.about = {
       <div class="card">
         <div class="card-header">
           <div class="card-title">ℹ️ Help, Keyboard Shortcuts & System Blueprint</div>
-          <span class="badge info">MediStock ERP v1.0.0</span>
+          <span class="badge info">PharmaDesk ERP v1.0.0</span>
         </div>
 
         <div style="background: linear-gradient(135deg, #0f172a, #1e293b); color: #fff; padding: 18px; border-radius: var(--radius); margin-bottom: 20px;">
-          <h3 style="font-size: 16px; font-weight: 800; color: #38bdf8; margin-bottom: 4px;">MEDISTOCK PHARMACY ERP</h3>
-          <p style="font-size: 12.5px; color: #cbd5e1; max-width: 800px; line-height: 1.4;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+            <img src="assets/logo.png" style="width: 38px; height: 38px; border-radius: 8px; object-fit: contain; background: #fff; padding: 2px;">
+            <div>
+              <h3 style="font-size: 16px; font-weight: 800; color: #38bdf8; margin: 0;">PHARMADESK PHARMACY ERP & POS</h3>
+              <div style="font-size: 11px; color: #94a3b8; font-weight: 600;">Proud Production of ByteSphere</div>
+            </div>
+          </div>
+          <p style="font-size: 12.5px; color: #cbd5e1; max-width: 800px; line-height: 1.4; margin: 0;">
             High-speed, offline-first Windows Desktop Pharmacy Management ERP inspired by the operational keyboard ergonomics of MARG ERP 9+, engineered with modern Electron desktop runtime, isolated contextBridge security, transactional SQLite WAL database, and strict double-entry accounting.
           </p>
         </div>

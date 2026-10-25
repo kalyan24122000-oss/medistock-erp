@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MediStock ERP — Pharmacy Desktop ERP</title>
+  <title>PharmaDesk — Pharmacy Desktop ERP & POS</title>
   <link rel="stylesheet" href="css/app.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/billing.css">
@@ -14,10 +14,10 @@
     <!-- Sidebar -->
     <aside id="sidebar">
       <div class="sidebar-brand">
-        <div class="brand-icon">M</div>
+        <img src="assets/logo.png" alt="PharmaDesk" class="sidebar-brand-img">
         <div class="brand-info">
-          <h1>MEDISTOCK</h1>
-          <span>PHARMACY ERP 9+</span>
+          <h1>PHARMADESK</h1>
+          <span>PHARMACY ERP & POS</span>
         </div>
       </div>
 
@@ -93,11 +93,14 @@
 
       <div class="sidebar-footer">
         <div class="user-badge">
-          <div class="user-avatar" id="user-avatar">AD</div>
+          <div class="user-avatar" id="user-avatar">OP</div>
           <div class="user-details">
-            <div class="user-name" id="user-display-name">Admin (Rajesh)</div>
-            <div class="user-role" id="user-display-role">Administrator</div>
+            <div class="user-name" id="user-display-name">Counter Operator</div>
+            <div class="user-role" id="user-display-role">Pharmacist</div>
           </div>
+        </div>
+        <div class="sidebar-bytesphere-tag">
+          Proud Production of ByteSphere
         </div>
       </div>
     </aside>
@@ -128,7 +131,7 @@
           <div class="topbar-clock" id="live-clock">12:00:00 PM</div>
           <div class="topbar-user-pill" id="topbar-user-badge">
             <span style="font-size: 13px;">👤</span>
-            <span id="topbar-username">Rajesh (Admin)</span>
+            <span id="topbar-username">Operator</span>
             <button class="topbar-logout-btn" id="btn-topbar-logout" title="Sign out / Switch Operator (Alt+L)">
               🚪 Logout
             </button>
@@ -148,6 +151,15 @@
       <main id="view-container">
         <!-- Rendered dynamically by app.js router -->
       </main>
+
+      <!-- Global Persistent Footer Across All Pages -->
+      <footer id="app-footer" class="app-page-footer">
+        <div class="footer-credit">
+          <span class="credit-highlight">Proud Production of ByteSphere</span>
+          <span class="footer-divider">•</span>
+          <span class="credit-sub">PharmaDesk ERP v1.0.0</span>
+        </div>
+      </footer>
     </div>
   </div>
 

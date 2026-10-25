@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MediStock Technologies — SuperAdmin & Licensing Master Console</title>
+  <title>PharmaDesk — SuperAdmin & Licensing Master Console • ByteSphere</title>
   <link rel="stylesheet" href="css/superadmin.css">
 </head>
 <body>
@@ -12,10 +12,10 @@
     <header id="sa-topbar">
       <div class="sa-topbar-left">
         <div class="sa-brand-badge">
-          <div class="sa-crown-icon">👑</div>
+          <img src="assets/logo.png" alt="PharmaDesk" style="height: 38px; width: auto; object-fit: contain; background: #ffffff; border-radius: 6px; padding: 2px;">
           <div class="sa-brand-info">
-            <h1>MEDISTOCK TECHNOLOGIES</h1>
-            <span class="sa-role-tag">SUPERADMIN • SOFTWARE OWNER</span>
+            <h1>PHARMADESK LICENSING</h1>
+            <span class="sa-role-tag">SUPERADMIN • BYTESPHERE</span>
           </div>
         </div>
         <div class="sa-server-status" id="sa-server-status-pill">
@@ -71,22 +71,29 @@
 
         <div class="sa-sidebar-footer">
           <div class="sa-owner-badge">
-            <div class="owner-avatar">RP</div>
+            <div class="owner-avatar">👑</div>
             <div class="owner-info">
-              <div class="owner-title">Rajesh Patel</div>
-              <div class="owner-sub">Founder & Software Owner</div>
+              <div class="owner-title">SuperAdmin</div>
+              <div class="owner-sub">ByteSphere Licensing Authority</div>
             </div>
           </div>
-          <div class="sa-system-info">
-            MediStock Licensing Engine v1.0.0
+          <div class="sa-system-info" style="font-weight: 700; color: #38bdf8; font-size: 11px;">
+            Proud Production of ByteSphere
           </div>
         </div>
       </aside>
 
-      <!-- Dynamic View Container -->
-      <main id="sa-content">
-        <!-- Rendered by app.js -->
-      </main>
+      <!-- Main App Content & Global Footer -->
+      <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+        <main id="sa-content" style="flex: 1; overflow-y: auto;">
+          <!-- Rendered by app.js -->
+        </main>
+        <footer style="height: 28px; min-height: 28px; background: #0c1220; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-dim);">
+          <strong style="color: var(--primary);">Proud Production of ByteSphere</strong>
+          <span style="margin: 0 8px;">•</span>
+          <span>PharmaDesk Technologies</span>
+        </footer>
+      </div>
     </div>
   </div>
 

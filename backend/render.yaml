@@ -1,15 +1,19 @@
 services:
   - type: web
-    name: medistock-licensing-backend
-    env: node
-    rootDir: backend
-    buildCommand: npm install
-    startCommand: node server.js
+    name: pharmadesk-licensing-backend
+    runtime: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
     envVars:
+      - key: NODE_VERSION
+        value: 22.12.0
       - key: NODE_ENV
         value: production
       - key: LICENSE_SECRET_SALT
         generateValue: true
+      - key: DATA_DIR
+        value: /app/data
     disk:
       name: license-data
       mountPath: /app/data

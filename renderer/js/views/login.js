@@ -24,14 +24,14 @@ window.MediStockViews.login = {
       console.warn('Login metadata load warning:', e.message);
     }
 
-    const rememberedUser = localStorage.getItem('medistock_remembered_username') || 'admin';
+    const rememberedUser = localStorage.getItem('medistock_remembered_username') || '';
 
     container.innerHTML = `
       <div class="auth-fullscreen-container">
         <div class="auth-card-panel login-card-panel">
           <div class="auth-header">
             <div class="auth-brand-logo">
-              <div class="auth-logo-badge">M</div>
+              <img src="assets/logo.png" class="auth-header-logo" alt="PharmaDesk">
             </div>
             <h2 class="auth-title">${companyName}</h2>
             <p class="auth-subtitle">${dlBadge}</p>
@@ -40,12 +40,12 @@ window.MediStockViews.login = {
             </div>
           </div>
 
-          <!-- Login Form -->
+          <!-- Operator Sign-In Form -->
           <form id="pharmacy-login-form" style="margin-top: 18px;">
             <div class="form-group">
               <label class="form-label">Operator Username *</label>
               <input type="text" id="login-username-input" class="form-control"
-                     value="${rememberedUser}" placeholder="Enter username (e.g. admin, cashier)" required autofocus>
+                     value="${rememberedUser}" placeholder="Enter operator username" required autofocus>
             </div>
 
             <div class="form-group">
@@ -56,12 +56,12 @@ window.MediStockViews.login = {
                 </button>
               </div>
               <input type="password" id="login-password-input" class="form-control"
-                     value="admin123" placeholder="Enter password" required>
+                     value="" placeholder="Enter password" required>
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 11.5px; color: var(--text-muted);">
               <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                <input type="checkbox" id="chk-remember-user" checked> Remember Username
+                <input type="checkbox" id="chk-remember-user" ${rememberedUser ? 'checked' : ''}> Remember Username
               </label>
               <span style="font-size: 11px; color: #64748b;">Role-based Security</span>
             </div>
@@ -71,25 +71,8 @@ window.MediStockViews.login = {
             </button>
           </form>
 
-          <!-- Quick Operator Switcher Pills -->
-          <div class="auth-presets-box" style="margin-top: 18px;">
-            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase;">
-              Quick Shift / Demo Operator Login:
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
-              <button type="button" class="btn btn-outline btn-sm op-preset" data-user="admin" data-pass="admin123">
-                👑 Admin
-              </button>
-              <button type="button" class="btn btn-outline btn-sm op-preset" data-user="pharmacist" data-pass="pharma123">
-                💊 Pharmacist
-              </button>
-              <button type="button" class="btn btn-outline btn-sm op-preset" data-user="cashier" data-pass="cashier123">
-                🧾 Cashier
-              </button>
-            </div>
-            <div style="margin-top: 12px; font-size: 11px; color: #64748b; text-align: center;">
-              MediStock ERP v1.0.0 • Offline-First Pharmacy Architecture
-            </div>
+          <div class="auth-card-footer">
+            Proud Production of ByteSphere
           </div>
         </div>
       </div>
@@ -103,15 +86,6 @@ window.MediStockViews.login = {
       isShowingPass = !isShowingPass;
       passInput.type = isShowingPass ? 'text' : 'password';
       btnToggle.textContent = isShowingPass ? 'Hide Password' : 'Show Password';
-    });
-
-    // Preset operator switcher
-    document.querySelectorAll('.op-preset').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.getElementById('login-username-input').value = btn.dataset.user;
-        document.getElementById('login-password-input').value = btn.dataset.pass;
-        document.getElementById('btn-login-submit').focus();
-      });
     });
 
     // Handle form submit

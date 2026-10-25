@@ -225,7 +225,7 @@ window.MediStockViews.settings = {
           <span class="badge success" style="font-size: 12px; padding: 4px 10px;">Configured to Exactly 15 Navigation Tabs</span>
         </div>
         <p style="font-size: 12.5px; color: #475569; margin-bottom: 14px;">
-          The MediStock ERP sidebar navigation has been streamlined to <strong>exactly 15 focused tabs</strong>, grouping administrative utilities (Profile, Users, Backups, and Shortcuts) cleanly under Tab 15.
+          The PharmaDesk ERP sidebar navigation has been streamlined to <strong>exactly 15 focused tabs</strong>, grouping administrative utilities (Profile, Users, Backups, and Shortcuts) cleanly under Tab 15.
         </p>
 
         <div class="table-container">

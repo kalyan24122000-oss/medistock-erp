@@ -10,7 +10,9 @@ const { getLicenseDatabase } = require('./db');
 const { generateLicenseKey, signLicensePayload } = require('./license-generator');
 
 const PORT = process.env.PORT || 5000;
-const ADMIN_PANEL_DIR = path.join(__dirname, '..', 'admin-panel');
+const ADMIN_PANEL_DIR = fs.existsSync(path.join(__dirname, 'admin-panel'))
+  ? path.join(__dirname, 'admin-panel')
+  : path.join(__dirname, '..', 'admin-panel');
 
 // In-memory admin session storage (simple token -> admin object)
 const activeAdminSessions = new Map();
@@ -99,6 +101,17 @@ const server = http.createServer(async (req, res) => {
   // Handle Preflight CORS
   if (method === 'OPTIONS') {
     return handleCors(res);
+  }
+
+  // Health Check route for Cloud Providers (Render / Railway / Fly.io / K8s)
+  if (method === 'GET' && (pathname === '/health' || pathname === '/api/health')) {
+    return sendJson(res, 200, {
+      status: 'ok',
+      service: 'pharmadesk-licensing-backend',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      node: process.version
+    });
   }
 
   const db = getLicenseDatabase();
@@ -544,8 +557,8 @@ const server = http.createServer(async (req, res) => {
 function startServer(port = PORT) {
   return new Promise((resolve) => {
     server.listen(port, () => {
-      console.log(`[MediStock Licensing Backend] Server active at http://localhost:${port}`);
-      console.log(`[MediStock Admin Portal] Open in browser: http://localhost:${port}/admin`);
+      console.log(`[PharmaDesk Licensing Backend] Server active at http://localhost:${port}`);
+      console.log(`[PharmaDesk Admin Portal] Open in browser: http://localhost:${port}/admin`);
       resolve(server);
     });
   });
