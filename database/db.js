@@ -8,6 +8,20 @@ const fs = require('fs');
 let dbInstance = null;
 let currentDbPath = null;
 
+function getDataDir() {
+  if (process.env.APPDATA_DIR) {
+    return process.env.APPDATA_DIR;
+  }
+  try {
+    const electron = require('electron');
+    const app = electron.app || (electron.remote && electron.remote.app);
+    if (app && app.getPath) {
+      return path.join(app.getPath('userData'), 'data');
+    }
+  } catch (e) {}
+  return path.join(__dirname, '..', 'data');
+}
+
 /**
  * Get or initialize the database connection.
  * @param {string} [customPath] - Optional custom path for test/backup/production
@@ -18,12 +32,22 @@ function getDatabase(customPath) {
     return dbInstance;
   }
 
-  const defaultDir = path.join(__dirname, '..', 'data');
+  const defaultDir = getDataDir();
   if (!fs.existsSync(defaultDir)) {
     fs.mkdirSync(defaultDir, { recursive: true });
   }
 
   const dbPath = customPath || path.join(defaultDir, 'medistock.db');
+
+  // Copy bundle template DB if userData db is fresh
+  const templateDb = path.join(__dirname, '..', 'data', 'medistock.db');
+  if (!customPath && !fs.existsSync(dbPath) && fs.existsSync(templateDb)) {
+    try {
+      fs.copyFileSync(templateDb, dbPath);
+    } catch (e) {
+      console.warn('Note copying template database:', e.message);
+    }
+  }
 
   if (dbInstance && currentDbPath === dbPath) {
     return dbInstance;

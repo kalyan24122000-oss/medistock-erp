@@ -90,19 +90,38 @@ window.MediStockViews.login = {
 
     // Handle form submit
     const form = document.getElementById('pharmacy-login-form');
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const username = document.getElementById('login-username-input').value.trim();
-      const password = document.getElementById('login-password-input').value;
-      const remember = document.getElementById('chk-remember-user').checked;
+    const submitBtn = document.getElementById('btn-login-submit');
+
+    const handleLogin = async (e) => {
+      if (e) e.preventDefault();
+
+      const usernameInput = document.getElementById('login-username-input');
+      const passwordInput = document.getElementById('login-password-input');
+      const username = usernameInput ? usernameInput.value.trim() : '';
+      const password = passwordInput ? passwordInput.value : '';
+      const remember = document.getElementById('chk-remember-user') ? document.getElementById('chk-remember-user').checked : false;
       const btn = document.getElementById('btn-login-submit');
 
-      btn.disabled = true;
-      btn.textContent = '⏳ Authenticating...';
+      if (!username) {
+        MediStock.toast('Please enter your operator username', 'warning');
+        if (usernameInput) usernameInput.focus();
+        return;
+      }
+
+      if (!password) {
+        MediStock.toast('Please enter your password', 'warning');
+        if (passwordInput) passwordInput.focus();
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Authenticating...';
+      }
 
       try {
         const res = await window.api.auth.login(username, password);
-        if (res.success) {
+        if (res && res.success) {
           if (remember) {
             localStorage.setItem('medistock_remembered_username', username);
           } else {
@@ -112,15 +131,31 @@ window.MediStockViews.login = {
           MediStock.toast(`Welcome, ${res.user.fullName}!`, 'success');
           MediStock.onLoginSuccess(res.user);
         } else {
-          MediStock.toast(res.message || 'Authentication failed', 'error');
-          btn.disabled = false;
-          btn.textContent = '🔐 Sign In to Counter (Enter)';
+          MediStock.toast(res && res.message ? res.message : 'Invalid credentials. Please verify username and password.', 'error');
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = '🔐 Sign In to Counter (Enter)';
+          }
         }
       } catch (err) {
         MediStock.toast(`Login error: ${err.message}`, 'error');
-        btn.disabled = false;
-        btn.textContent = '🔐 Sign In to Counter (Enter)';
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '🔐 Sign In to Counter (Enter)';
+        }
       }
-    });
+    };
+
+    if (form) {
+      form.addEventListener('submit', handleLogin);
+    }
+    if (submitBtn) {
+      submitBtn.addEventListener('click', (e) => {
+        // Only trigger manually if not handled by form submit
+        if (form && !form.checkValidity()) {
+          handleLogin(e);
+        }
+      });
+    }
   },
 };
