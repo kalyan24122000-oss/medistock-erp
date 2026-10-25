@@ -110,19 +110,20 @@ window.MediStockViews.billing = {
           <table class="billing-table">
             <thead>
               <tr>
-                <th style="width: 35px;">#</th>
+                <th style="width: 30px;">#</th>
                 <th>Medicine Description</th>
-                <th style="width: 100px;">Batch</th>
-                <th style="width: 75px;">Expiry</th>
-                <th style="width: 70px;">Unit</th>
-                <th style="width: 75px;" class="text-right">Qty</th>
-                <th style="width: 80px;" class="text-right">MRP</th>
-                <th style="width: 80px;" class="text-right">Rate</th>
-                <th style="width: 70px;" class="text-right">Disc %</th>
-                <th style="width: 85px;" class="text-right">Taxable</th>
-                <th style="width: 60px;" class="text-center">GST</th>
-                <th style="width: 95px;" class="text-right">Line Total</th>
-                <th style="width: 40px;" class="text-center">Del</th>
+                <th style="width: 80px;">Batch</th>
+                <th style="width: 65px;">Expiry</th>
+                <th style="width: 55px;" class="text-center" title="Tablets per Strip">Pack</th>
+                <th style="width: 60px;" class="text-right" title="Full Strips quantity">Strips</th>
+                <th style="width: 68px;" class="text-right" title="Custom number of loose tablets (Loose Qty)">Loose Tabs</th>
+                <th style="width: 75px;" class="text-right" title="Unit Selling Price per tablet (USP)">USP (₹/Tab)</th>
+                <th style="width: 75px;" class="text-right" title="Rate per Strip">Strip Rate</th>
+                <th style="width: 55px;" class="text-right">Disc %</th>
+                <th style="width: 70px;" class="text-right">Taxable</th>
+                <th style="width: 45px;" class="text-center">GST</th>
+                <th style="width: 85px;" class="text-right">Line Total</th>
+                <th style="width: 32px;" class="text-center">Del</th>
               </tr>
             </thead>
             <tbody id="pos-items-tbody">
@@ -367,10 +368,11 @@ window.MediStockViews.billing = {
             <div class="s-item-mfg">${m.manufacturer_name || ''} | Pack: 1 ${m.sale_unit} (${m.conversion_ratio} tabs)</div>
           </div>
           <div class="s-item-pricing">
-            <span class="s-item-rate">${MediStock.formatRupees(m.selling_price)}</span>
+            <span class="s-item-rate">${MediStock.formatRupees(m.selling_price)}/${m.sale_unit || 'Strip'}</span>
+            <span class="s-item-usp">USP: ${MediStock.formatRupees(Math.round(m.selling_price / (m.conversion_ratio || 10)))}/Tab</span>
             <span class="s-item-mrp">MRP ${MediStock.formatRupees(m.mrp)}</span>
             <span class="s-item-stock ${m.total_stock > 10 ? 'badge success' : m.total_stock > 0 ? 'badge warning' : 'badge danger'}">
-              Stock: ${m.total_stock} ${m.sale_unit}s
+              Stock: ${m.total_stock} ${m.sale_unit}s (${m.total_stock * (m.conversion_ratio || 10)} Tabs)
             </span>
           </div>
         </div>
@@ -473,15 +475,21 @@ window.MediStockViews.billing = {
   },
 
   addBatchToGrid(product, batch) {
+    const conv = Number(product.conversion_ratio) || 10;
+    const stripRate = Number(batch.selling_price) || 0;
+    const initialUsp = Math.round(stripRate / conv);
+
     // Check if product & batch already in grid
     const existingIndex = this.bill.items.findIndex((x) => x.batchId === batch.id);
     if (existingIndex >= 0) {
-      // Increment quantity
-      if (this.bill.items[existingIndex].quantity + 1 <= batch.available_qty) {
-        this.bill.items[existingIndex].quantity += 1;
-        MediStock.toast(`Incremented quantity for ${product.brand_name}`, 'info');
+      const it = this.bill.items[existingIndex];
+      const curEffective = (it.strips || 0) + ((it.looseTabs || 0) / conv);
+      if (curEffective + 1 <= batch.available_qty) {
+        it.strips = (it.strips || 0) + 1;
+        it.quantity = it.strips + ((it.looseTabs || 0) / conv);
+        MediStock.toast(`Incremented strips for ${product.brand_name}`, 'info');
       } else {
-        MediStock.toast(`Cannot exceed available batch stock (${batch.available_qty})`, 'warning');
+        MediStock.toast(`Cannot exceed available batch stock (${batch.available_qty} strips)`, 'warning');
       }
     } else {
       // Add new line item
@@ -493,10 +501,15 @@ window.MediStockViews.billing = {
         batchNumber: batch.batch_number,
         expiryDate: batch.expiry_date,
         unit: product.sale_unit || 'Strip',
+        conversionRatio: conv,
+        isLooseAllowed: product.is_loose_allowed !== 0,
         availableQty: batch.available_qty,
-        quantity: 1,
+        strips: 1, // Full strips
+        looseTabs: 0, // Custom loose tablets
+        quantity: 1, // Total effective strips
         mrp: batch.mrp,
-        sellingRate: batch.selling_price,
+        sellingRate: stripRate, // Price per strip (paise)
+        usp: initialUsp, // Unit Selling Price per tablet (paise)
         discountPercent: 0,
         taxRate: product.tax_rate || 1200,
       });
@@ -520,7 +533,7 @@ window.MediStockViews.billing = {
     if (this.bill.items.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="13" class="text-center" style="padding: 36px; color: var(--text-muted);">
+          <td colspan="14" class="text-center" style="padding: 36px; color: var(--text-muted);">
             No medicines added yet. Type medicine name or scan barcode above to start bill!
           </td>
         </tr>
@@ -530,8 +543,10 @@ window.MediStockViews.billing = {
 
     tbody.innerHTML = this.bill.items
       .map((it, idx) => {
-        // Calculate line values in UI
         const calc = this.calculateLineLocally(it);
+        const conv = Number(it.conversionRatio) || 10;
+        const strips = it.strips !== undefined ? it.strips : it.quantity;
+        const looseTabs = it.looseTabs || 0;
 
         return `
         <tr data-index="${idx}">
@@ -542,15 +557,22 @@ window.MediStockViews.billing = {
           </td>
           <td><span class="font-mono">${it.batchNumber}</span></td>
           <td style="font-size: 11px;">${it.expiryDate}</td>
-          <td><span class="badge neutral">${it.unit}</span></td>
+          <td class="text-center"><span class="badge neutral" style="font-size: 10px;">${conv} T</span></td>
           <td class="text-right">
-            <input type="number" min="0.1" step="any" max="${it.availableQty}" value="${it.quantity}"
-                   class="grid-qty-input pos-item-qty" data-index="${idx}">
+            <input type="number" min="0" step="1" max="${it.availableQty}" value="${strips}"
+                   class="grid-qty-input pos-item-strips" data-index="${idx}" title="Full Strips Quantity">
           </td>
-          <td class="text-right font-mono" style="color: var(--text-muted);">${MediStock.formatRupees(it.mrp)}</td>
+          <td class="text-right">
+            <input type="number" min="0" step="1" max="${Math.floor(it.availableQty * conv)}" value="${looseTabs}"
+                   class="grid-tabs-input pos-item-tabs" data-index="${idx}" placeholder="0" title="Custom Number of Loose Tablets">
+          </td>
+          <td class="text-right">
+            <input type="number" step="0.05" min="0" value="${(calc.usp / 100).toFixed(2)}"
+                   class="grid-usp-input pos-item-usp" data-index="${idx}" title="Unit Selling Price per tablet (USP)">
+          </td>
           <td class="text-right">
             <input type="number" value="${(it.sellingRate / 100).toFixed(2)}" step="0.5"
-                   class="grid-rate-input pos-item-rate" data-index="${idx}">
+                   class="grid-rate-input pos-item-rate" data-index="${idx}" title="Selling Rate per Strip">
           </td>
           <td class="text-right">
             <input type="number" min="0" max="100" value="${it.discountPercent}"
@@ -568,34 +590,71 @@ window.MediStockViews.billing = {
       .join('');
 
     // Attach row events
-    tbody.querySelectorAll('.pos-item-qty').forEach((inp) => {
+    // 1. Strips input
+    tbody.querySelectorAll('.pos-item-strips').forEach((inp) => {
       inp.addEventListener('change', (e) => {
         const idx = Number(e.target.getAttribute('data-index'));
-        const val = Number(e.target.value);
-        if (val <= 0) {
+        const item = this.bill.items[idx];
+        const val = Math.max(0, parseInt(e.target.value) || 0);
+        item.strips = val;
+        item.quantity = val + ((item.looseTabs || 0) / (item.conversionRatio || 10));
+
+        if (item.strips === 0 && (!item.looseTabs || item.looseTabs === 0)) {
           this.bill.items.splice(idx, 1);
-        } else if (val > this.bill.items[idx].availableQty) {
-          MediStock.toast(`Quantity exceeds batch stock (${this.bill.items[idx].availableQty})`, 'warning');
-          e.target.value = this.bill.items[idx].availableQty;
-          this.bill.items[idx].quantity = this.bill.items[idx].availableQty;
-        } else {
-          this.bill.items[idx].quantity = val;
+        } else if (item.quantity > item.availableQty) {
+          MediStock.toast(`Total quantity exceeds batch stock (${item.availableQty} strips)`, 'warning');
         }
         this.renderItemsTable();
         this.updateTotals();
       });
     });
 
-    tbody.querySelectorAll('.pos-item-rate').forEach((inp) => {
+    // 2. Custom Loose Tablets input
+    tbody.querySelectorAll('.pos-item-tabs').forEach((inp) => {
       inp.addEventListener('change', (e) => {
         const idx = Number(e.target.getAttribute('data-index'));
-        const val = Math.round(Number(e.target.value) * 100);
-        this.bill.items[idx].sellingRate = val;
+        const item = this.bill.items[idx];
+        const tabsVal = Math.max(0, parseInt(e.target.value) || 0);
+        item.looseTabs = tabsVal;
+        item.quantity = (item.strips || 0) + (tabsVal / (item.conversionRatio || 10));
+
+        if ((item.strips === 0 || !item.strips) && tabsVal === 0) {
+          this.bill.items.splice(idx, 1);
+        } else if (item.quantity > item.availableQty) {
+          MediStock.toast(`Total quantity exceeds batch stock (${item.availableQty} strips)`, 'warning');
+        }
         this.renderItemsTable();
         this.updateTotals();
       });
     });
 
+    // 3. USP (Unit Selling Price per tablet) input
+    tbody.querySelectorAll('.pos-item-usp').forEach((inp) => {
+      inp.addEventListener('change', (e) => {
+        const idx = Number(e.target.getAttribute('data-index'));
+        const item = this.bill.items[idx];
+        const uspVal = Math.round(Number(e.target.value) * 100);
+        item.usp = uspVal;
+        item.sellingRate = Math.round(uspVal * (item.conversionRatio || 10));
+        this.renderItemsTable();
+        this.updateTotals();
+      });
+    });
+
+    // 4. Strip Rate input
+    tbody.querySelectorAll('.pos-item-rate').forEach((inp) => {
+      inp.addEventListener('change', (e) => {
+        const idx = Number(e.target.getAttribute('data-index'));
+        const item = this.bill.items[idx];
+        const rateVal = Math.round(Number(e.target.value) * 100);
+        item.sellingRate = rateVal;
+        item.usp = Math.round(rateVal / (item.conversionRatio || 10));
+        this.renderItemsTable();
+        this.updateTotals();
+      });
+    });
+
+    // 5. Discount % input
     tbody.querySelectorAll('.pos-item-disc').forEach((inp) => {
       inp.addEventListener('change', (e) => {
         const idx = Number(e.target.getAttribute('data-index'));
@@ -606,6 +665,7 @@ window.MediStockViews.billing = {
       });
     });
 
+    // 6. Delete row
     tbody.querySelectorAll('.btn-delete-row').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const idx = Number(btn.getAttribute('data-index'));
@@ -617,20 +677,44 @@ window.MediStockViews.billing = {
   },
 
   calculateLineLocally(item) {
-    const qty = Number(item.quantity) || 0;
-    const rate = Number(item.sellingRate) || 0;
+    const conv = Math.max(1, Number(item.conversionRatio) || 10);
+    const strips = Number(item.strips !== undefined ? item.strips : item.quantity) || 0;
+    const looseTabs = Number(item.looseTabs) || 0;
+    const stripRate = Number(item.sellingRate) || 0;
+    const usp = Number(item.usp) || Math.round(stripRate / conv);
     const disc = Number(item.discountPercent) || 0;
     const taxRate = Number(item.taxRate) || 1200;
 
-    const gross = Math.round(qty * rate);
+    // Gross calculation: (strips * stripRate) + (looseTabs * usp)
+    let gross;
+    if (looseTabs > 0 && strips === 0) {
+      gross = Math.round(looseTabs * usp);
+    } else if (looseTabs > 0 && strips > 0) {
+      gross = Math.round((strips * stripRate) + (looseTabs * usp));
+    } else {
+      gross = Math.round(strips * stripRate);
+    }
+
     const lineDiscount = Math.round((gross * disc) / 100);
     const taxable = Math.max(0, gross - lineDiscount);
     const halfTax = taxRate / 2;
     const cgst = Math.round((taxable * halfTax) / 10000);
     const sgst = Math.round((taxable * halfTax) / 10000);
     const lineTotal = taxable + cgst + sgst;
+    const effectiveQty = strips + (looseTabs / conv);
 
-    return { gross, lineDiscount, taxable, cgst, sgst, totalTax: cgst + sgst, lineTotal };
+    return {
+      gross,
+      lineDiscount,
+      taxable,
+      cgst,
+      sgst,
+      totalTax: cgst + sgst,
+      lineTotal,
+      effectiveQty,
+      usp,
+      stripRate,
+    };
   },
 
   updateTotals() {
@@ -643,7 +727,7 @@ window.MediStockViews.billing = {
 
     for (const it of this.bill.items) {
       const c = this.calculateLineLocally(it);
-      totalQty += Number(it.quantity) || 0;
+      totalQty += c.effectiveQty;
       subtotal += c.gross;
       discount += c.lineDiscount;
       taxable += c.taxable;
@@ -655,7 +739,7 @@ window.MediStockViews.billing = {
     const roundoff = grandTotal - unrounded;
 
     document.getElementById('val-total-items').textContent = totalItems;
-    document.getElementById('val-total-qty').textContent = totalQty;
+    document.getElementById('val-total-qty').textContent = Number.isInteger(totalQty) ? totalQty : totalQty.toFixed(2);
     document.getElementById('val-subtotal').textContent = MediStock.formatRupees(subtotal);
     document.getElementById('val-discount').textContent = MediStock.formatRupees(discount);
     document.getElementById('val-taxable').textContent = MediStock.formatRupees(taxable);
@@ -673,6 +757,44 @@ window.MediStockViews.billing = {
     }
 
     try {
+      const preparedItems = this.bill.items.map((it) => {
+        const c = this.calculateLineLocally(it);
+        const conv = Number(it.conversionRatio) || 10;
+        const strips = Number(it.strips !== undefined ? it.strips : it.quantity) || 0;
+        const looseTabs = Number(it.looseTabs) || 0;
+
+        let unitDesc = it.unit || 'Strip';
+        if (looseTabs > 0 && strips === 0) {
+          unitDesc = `${looseTabs} Tab${looseTabs > 1 ? 's' : ''}`;
+        } else if (looseTabs > 0 && strips > 0) {
+          unitDesc = `${strips} Strip + ${looseTabs}T`;
+        }
+
+        return {
+          productId: it.productId,
+          brandName: it.brandName,
+          scheduleType: it.scheduleType,
+          batchId: it.batchId,
+          batchNumber: it.batchNumber,
+          expiryDate: it.expiryDate,
+          unit: unitDesc,
+          conversionRatio: conv,
+          strips,
+          looseTabs,
+          usp: c.usp,
+          quantity: c.effectiveQty,
+          mrp: it.mrp,
+          sellingRate: it.sellingRate,
+          discountPercent: it.discountPercent,
+          taxRate: it.taxRate,
+          taxableAmount: c.taxable,
+          cgstAmount: c.cgst,
+          sgstAmount: c.sgst,
+          igstAmount: 0,
+          lineTotal: c.lineTotal,
+        };
+      });
+
       const payload = {
         invoiceType: 'RETAIL',
         customerId: this.bill.customer.id,
@@ -681,7 +803,7 @@ window.MediStockViews.billing = {
         doctorName: this.bill.doctorName,
         doctorRegNo: this.bill.doctorRegNo,
         paymentMode: this.bill.paymentMode,
-        items: this.bill.items,
+        items: preparedItems,
         invoiceDiscountPercent: this.bill.invoiceDiscountPercent,
         invoiceDiscountAmount: this.bill.invoiceDiscountAmount,
         notes: this.bill.notes,
@@ -747,7 +869,7 @@ window.MediStockViews.billing = {
                   <td>${it.brand_name}</td>
                   <td style="text-align: center;">${it.batch_number}</td>
                   <td style="text-align: center;">${it.expiry_date.slice(2, 7)}</td>
-                  <td style="text-align: right;">${it.quantity}</td>
+                  <td style="text-align: right;">${it.unit || it.quantity}</td>
                   <td style="text-align: right;">${(it.selling_rate / 100).toFixed(2)}</td>
                   <td style="text-align: right;">${(it.line_total / 100).toFixed(2)}</td>
                 </tr>

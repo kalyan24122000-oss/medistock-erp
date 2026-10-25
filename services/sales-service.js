@@ -15,13 +15,24 @@ const { getNextVoucherNumber } = require('./numbering-service');
  * @param {number} [item.mrp=0] - In paise
  */
 function calculateLineItem(item) {
-  const qty = Number(item.quantity) || 0;
-  const rate = Number(item.sellingRate) || 0;
+  const conv = Math.max(1, Number(item.conversionRatio) || 10);
+  const strips = Number(item.strips !== undefined ? item.strips : item.quantity) || 0;
+  const looseTabs = Number(item.looseTabs) || 0;
+  const stripRate = Number(item.sellingRate) || 0;
+  const usp = Number(item.usp) || Math.round(stripRate / conv);
   const discPercent = Math.max(0, Math.min(100, Number(item.discountPercent) || 0));
   const taxRateBp = Number(item.taxRate) || 1200; // 12% default
 
-  // Base gross before discount
-  const gross = Math.round(qty * rate);
+  // Base gross before discount: (strips * stripRate) + (looseTabs * usp)
+  let gross;
+  if (looseTabs > 0 && strips === 0) {
+    gross = Math.round(looseTabs * usp);
+  } else if (looseTabs > 0 && strips > 0) {
+    gross = Math.round((strips * stripRate) + (looseTabs * usp));
+  } else {
+    gross = Math.round(strips * stripRate);
+  }
+
   // Discount amount in paise
   const lineDiscount = Math.round((gross * discPercent) / 100);
   const taxable = Math.max(0, gross - lineDiscount);
@@ -33,6 +44,7 @@ function calculateLineItem(item) {
   const igst = 0; // Local intra-state default
   const totalTax = cgst + sgst;
   const lineTotal = taxable + totalTax;
+  const effectiveQty = strips + (looseTabs / conv);
 
   return {
     gross,
@@ -44,6 +56,9 @@ function calculateLineItem(item) {
     igst,
     totalTax,
     lineTotal,
+    effectiveQty,
+    usp,
+    stripRate,
   };
 }
 
@@ -237,7 +252,7 @@ function createSalesInvoice(invoiceData) {
         throw new Error(`Batch ${batch.batch_number} of "${batch.brand_name}" is blocked and cannot be sold.`);
       }
 
-      const reqQty = Number(it.quantity);
+      const reqQty = Number(it.quantity !== undefined ? it.quantity : lineCalc.effectiveQty);
       if (reqQty <= 0) {
         throw new Error(`Invalid quantity ${reqQty} for ${batch.brand_name}`);
       }

@@ -320,3 +320,39 @@ test('10. SQLite Online Backup and Integrity Verification', async () => {
   // Clean up test backup file
   fs.unlinkSync(backupRes.filePath);
 });
+
+test('11. Custom Loose Tablets & USP (Unit Selling Price) Calculation', () => {
+  // Dolo 650: 1 Strip = 15 Tablets. Strip Rate = ₹30.00 (3000 paise).
+  // USP = 3000 / 15 = 200 paise (₹2.00 per tablet).
+  // Selling 5 custom loose tablets with 0 full strips:
+  const line = calculateLineItem({
+    conversionRatio: 15,
+    strips: 0,
+    looseTabs: 5,
+    sellingRate: 3000,
+    usp: 200,
+    discountPercent: 0,
+    taxRate: 1200,
+  });
+
+  // 5 tablets * 200 paise = 1000 paise (₹10.00)
+  assert.equal(line.gross, 1000, 'Gross for 5 loose tablets should be 1000 paise (₹10.00)');
+  assert.equal(line.taxable, 1000, 'Taxable amount should be 1000 paise');
+  assert.equal(line.totalTax, 120, '12% GST should be 120 paise (₹1.20)');
+  assert.equal(line.lineTotal, 1120, 'Line total should be 1120 paise (₹11.20)');
+  assert.ok(Math.abs(line.effectiveQty - (5 / 15)) < 0.0001, 'Effective quantity should be exactly 5/15 strips');
+
+  // Test combination: 1 Full Strip + 3 Loose Tablets
+  const comboLine = calculateLineItem({
+    conversionRatio: 15,
+    strips: 1,
+    looseTabs: 3,
+    sellingRate: 3000,
+    usp: 200,
+    discountPercent: 0,
+    taxRate: 1200,
+  });
+  // (1 * 3000) + (3 * 200) = 3600 paise (₹36.00)
+  assert.equal(comboLine.gross, 3600, 'Gross should be 3600 paise (₹36.00)');
+  assert.ok(Math.abs(comboLine.effectiveQty - 1.2) < 0.0001, 'Effective quantity should be exactly 1.2 strips');
+});

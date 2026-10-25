@@ -278,6 +278,16 @@
   text-decoration: line-through;
 }
 
+.s-item-usp {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
 .s-item-stock {
   font-size: 11.5px;
   font-weight: 700;
@@ -335,6 +345,42 @@
   border-radius: var(--radius-sm);
   text-align: right;
   font-family: var(--font-mono);
+}
+
+.grid-tabs-input {
+  width: 58px;
+  padding: 4px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid #93c5fd;
+  background-color: #eff6ff;
+  border-radius: var(--radius-sm);
+  text-align: right;
+  font-family: var(--font-mono);
+  color: #1d4ed8;
+}
+.grid-tabs-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  background-color: #dbeafe;
+}
+
+.grid-usp-input {
+  width: 68px;
+  padding: 4px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid #a7f3d0;
+  background-color: #ecfdf5;
+  border-radius: var(--radius-sm);
+  text-align: right;
+  font-family: var(--font-mono);
+  color: #047857;
+}
+.grid-usp-input:focus {
+  outline: none;
+  border-color: #059669;
+  background-color: #d1fae5;
 }
 
 .grid-qty-input:focus,
