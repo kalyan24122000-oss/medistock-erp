@@ -84,6 +84,12 @@ window.MediStock = {
     const container = document.getElementById('view-container');
     if (!container) return;
 
+    // Sub-views of Administration cleanly route to the 15th tab (settings)
+    if (viewName === 'backup' || viewName === 'users' || viewName === 'about') {
+      const targetSubTab = viewName === 'about' ? 'shortcuts' : viewName;
+      return this.navigate('settings', targetSubTab);
+    }
+
     // Update sidebar navigation active state
     document.querySelectorAll('.sidebar-nav .nav-item').forEach((item) => {
       if (item.getAttribute('data-view') === viewName) {
@@ -137,6 +143,17 @@ window.MediStock = {
           if (inp) inp.focus();
         }, 100);
       } else if (e.key === 'F3') {
+        if (this.activeView === 'billing' && window.MediStockViews.billing) {
+          e.preventDefault();
+          const custInp = document.getElementById('pos-customer-name');
+          if (custInp) {
+            custInp.focus();
+            custInp.select();
+          } else {
+            window.MediStockViews.billing.openCustomerModal();
+          }
+        }
+      } else if (e.key === 'F4') {
         if (this.activeView === 'billing' && window.MediStockViews.billing) {
           e.preventDefault();
           window.MediStockViews.billing.openCustomerModal();

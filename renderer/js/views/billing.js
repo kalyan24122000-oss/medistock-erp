@@ -36,33 +36,54 @@ window.MediStockViews.billing = {
         <!-- Billing Header Bar -->
         <div class="billing-header-card">
           <div class="billing-header-fields">
-            <div class="billing-field-pill" style="cursor: pointer;" id="btn-select-customer" title="Click or Press F3 to change customer">
-              <strong>Customer (F3):</strong>
-              <span id="pos-customer-label">${this.bill.customer.name}</span>
+            <!-- Customer Name Direct Entry with Live Auto-Search & Directory Addon -->
+            <div class="billing-input-pill">
+              <span class="pill-label">Customer Name (F3):</span>
+              <div style="position: relative; display: flex; align-items: center;">
+                <input type="text" id="pos-customer-name" class="billing-field-input"
+                       placeholder="Customer Name (e.g. Walk-in)"
+                       value="${this.bill.customer.name}"
+                       autocomplete="off" style="width: 190px; padding-right: 26px;">
+                <button type="button" class="btn-input-addon" id="btn-browse-customer" title="Open Customer Directory (F3)">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </button>
+                <div id="pos-customer-dropdown" class="customer-dropdown-menu" style="display: none;"></div>
+              </div>
             </div>
 
-            <div class="billing-field-pill">
-              <strong>Doctor:</strong>
-              <input type="text" id="pos-doctor-name" placeholder="Dr. Name (Optional)" value="${this.bill.doctorName}"
-                     style="border: none; background: transparent; font-size: 11.5px; font-weight: 600; outline: none; width: 140px;">
+            <!-- Customer Mobile / Phone Direct Entry -->
+            <div class="billing-input-pill">
+              <span class="pill-label">Mobile No:</span>
+              <input type="tel" id="pos-customer-phone" class="billing-field-input"
+                     placeholder="10-digit Phone"
+                     value="${this.bill.customer.phone || ''}"
+                     maxlength="15" style="width: 125px;">
+              <span id="pos-cust-status" class="cust-match-badge" style="display: none;"></span>
             </div>
 
-            <div class="billing-field-pill">
-              <strong>Reg No:</strong>
-              <input type="text" id="pos-doctor-reg" placeholder="MCI Reg No" value="${this.bill.doctorRegNo}"
-                     style="border: none; background: transparent; font-size: 11.5px; font-weight: 600; outline: none; width: 90px;">
-            </div>
-
-            <div class="billing-field-pill">
-              <strong>Pay Mode:</strong>
-              <select id="pos-payment-mode" style="border: none; background: transparent; font-size: 11.5px; font-weight: 700; outline: none; cursor: pointer;">
-                <option value="CASH" ${this.bill.paymentMode === 'CASH' ? 'selected' : ''}>Cash</option>
-                <option value="UPI" ${this.bill.paymentMode === 'UPI' ? 'selected' : ''}>UPI / QR</option>
-                <option value="CARD" ${this.bill.paymentMode === 'CARD' ? 'selected' : ''}>Debit/Credit Card</option>
-                <option value="BANK_TRANSFER" ${this.bill.paymentMode === 'BANK_TRANSFER' ? 'selected' : ''}>Bank Transfer</option>
-                <option value="CREDIT" ${this.bill.paymentMode === 'CREDIT' ? 'selected' : ''}>Customer Credit (Udhar)</option>
+            <!-- Payment Mode -->
+            <div class="billing-input-pill">
+              <span class="pill-label">Payment:</span>
+              <select id="pos-payment-mode" class="billing-field-input" style="font-weight: 700; cursor: pointer;">
+                <option value="CASH" ${this.bill.paymentMode === 'CASH' ? 'selected' : ''}>💵 Cash</option>
+                <option value="UPI" ${this.bill.paymentMode === 'UPI' ? 'selected' : ''}>📱 UPI / QR</option>
+                <option value="CARD" ${this.bill.paymentMode === 'CARD' ? 'selected' : ''}>💳 Card</option>
+                <option value="BANK_TRANSFER" ${this.bill.paymentMode === 'BANK_TRANSFER' ? 'selected' : ''}>🏦 Bank</option>
+                <option value="CREDIT" ${this.bill.paymentMode === 'CREDIT' ? 'selected' : ''}>📋 Credit (Udhar)</option>
               </select>
             </div>
+
+            <!-- Optional Rx Doctor details (collapsible) -->
+            <div class="billing-input-pill" id="rx-doctor-pill" style="display: none;">
+              <span class="pill-label">Dr. Name:</span>
+              <input type="text" id="pos-doctor-name" class="billing-field-input" placeholder="Doctor Name" value="${this.bill.doctorName}" style="width: 120px;">
+              <span class="pill-label" style="margin-left: 4px;">MCI:</span>
+              <input type="text" id="pos-doctor-reg" class="billing-field-input" placeholder="Reg No" value="${this.bill.doctorRegNo}" style="width: 75px;">
+            </div>
+
+            <button type="button" class="btn btn-outline btn-xs" id="btn-toggle-rx" title="Click to show/hide Doctor & Prescription details">
+              + Rx Doctor
+            </button>
           </div>
 
           <div style="display: flex; gap: 8px;">
@@ -174,15 +195,115 @@ window.MediStockViews.billing = {
   bindEvents(container) {
     const searchInput = document.getElementById('pos-search-input');
     const searchResults = document.getElementById('pos-search-results');
+    const custNameInput = document.getElementById('pos-customer-name');
+    const custDropdown = document.getElementById('pos-customer-dropdown');
+    const custPhoneInput = document.getElementById('pos-customer-phone');
+    const custStatus = document.getElementById('pos-cust-status');
     const doctorInput = document.getElementById('pos-doctor-name');
     const regInput = document.getElementById('pos-doctor-reg');
     const paySelect = document.getElementById('pos-payment-mode');
+    const btnToggleRx = document.getElementById('btn-toggle-rx');
+    const rxPill = document.getElementById('rx-doctor-pill');
+
+    // Customer Name direct entry & live autocomplete dropdown
+    let custSearchTimeout = null;
+    custNameInput.addEventListener('input', (e) => {
+      const val = e.target.value;
+      this.bill.customer.name = val.trim() || 'Counter Cash / Walk-in Customer';
+      if (!val.trim()) {
+        this.bill.customer.id = null;
+        if (custDropdown) custDropdown.style.display = 'none';
+        return;
+      }
+      clearTimeout(custSearchTimeout);
+      custSearchTimeout = setTimeout(async () => {
+        try {
+          const list = await window.api.parties.listCustomers(val.trim());
+          if (list && list.length > 0) {
+            custDropdown.innerHTML = list.slice(0, 8).map(c => `
+              <div class="cust-dropdown-item" data-id="${c.id}" data-name="${c.name.replace(/"/g, '&quot;')}" data-phone="${c.phone || ''}">
+                <strong>${c.name}</strong>
+                <span>${c.phone || 'No phone'} | Balance: ${MediStock.formatRupees(c.current_balance)}</span>
+              </div>
+            `).join('');
+            custDropdown.style.display = 'block';
+
+            custDropdown.querySelectorAll('.cust-dropdown-item').forEach(item => {
+              item.addEventListener('click', () => {
+                this.setCustomer(Number(item.dataset.id), item.dataset.name, item.dataset.phone);
+                custDropdown.style.display = 'none';
+              });
+            });
+          } else {
+            custDropdown.style.display = 'none';
+          }
+        } catch (err) {
+          console.warn('Customer search error:', err);
+        }
+      }, 150);
+    });
+
+    // Customer Phone direct entry & auto-lookup
+    let phoneLookupTimeout = null;
+    custPhoneInput.addEventListener('input', (e) => {
+      const raw = e.target.value.replace(/[^0-9]/g, '');
+      this.bill.customer.phone = raw;
+      if (raw.length >= 10) {
+        clearTimeout(phoneLookupTimeout);
+        phoneLookupTimeout = setTimeout(async () => {
+          try {
+            const list = await window.api.parties.listCustomers(raw);
+            const match = list.find(c => c.phone === raw || (c.phone && c.phone.endsWith(raw.slice(-10))));
+            if (match) {
+              this.bill.customer.id = match.id;
+              this.bill.customer.name = match.name;
+              custNameInput.value = match.name;
+              custStatus.textContent = 'Found';
+              custStatus.className = 'cust-match-badge found';
+              custStatus.style.display = 'inline-block';
+              MediStock.toast(`Customer identified: "${match.name}"`, 'info');
+            } else {
+              custStatus.textContent = 'New Walk-in';
+              custStatus.className = 'cust-match-badge new';
+              custStatus.style.display = 'inline-block';
+              this.bill.customer.id = null;
+            }
+          } catch (err) {
+            console.warn('Phone search error:', err);
+          }
+        }, 150);
+      } else {
+        custStatus.style.display = 'none';
+      }
+    });
+
+    // Close customer dropdown on outside click
+    document.addEventListener('click', (e) => {
+      if (custDropdown && !custNameInput.contains(e.target) && !custDropdown.contains(e.target)) {
+        custDropdown.style.display = 'none';
+      }
+    });
+
+    // Open full customer selection modal on browse button click
+    const btnBrowse = document.getElementById('btn-browse-customer');
+    if (btnBrowse) {
+      btnBrowse.addEventListener('click', () => this.openCustomerModal());
+    }
+
+    // Toggle optional Rx Doctor input fields
+    if (btnToggleRx && rxPill) {
+      btnToggleRx.addEventListener('click', () => {
+        const isHidden = rxPill.style.display === 'none';
+        rxPill.style.display = isHidden ? 'flex' : 'none';
+        btnToggleRx.textContent = isHidden ? '– Hide Rx' : '+ Rx Doctor';
+        if (isHidden) doctorInput.focus();
+      });
+    }
 
     doctorInput.addEventListener('input', (e) => { this.bill.doctorName = e.target.value; });
     regInput.addEventListener('input', (e) => { this.bill.doctorRegNo = e.target.value; });
     paySelect.addEventListener('change', (e) => { this.bill.paymentMode = e.target.value; });
 
-    document.getElementById('btn-select-customer').addEventListener('click', () => this.openCustomerModal());
     document.getElementById('btn-hold-bill').addEventListener('click', () => this.holdCurrentBill());
     document.getElementById('btn-resume-bill').addEventListener('click', () => this.resumeHeldBill());
     document.getElementById('btn-clear-bill').addEventListener('click', () => this.clearBill());
@@ -712,9 +833,23 @@ window.MediStockViews.billing = {
   },
 
   setCustomer(id, name, phone) {
-    this.bill.customer = { id, name, phone };
-    const label = document.getElementById('pos-customer-label');
-    if (label) label.textContent = name;
+    this.bill.customer = { id, name, phone: phone || '' };
+    const nameInput = document.getElementById('pos-customer-name');
+    if (nameInput) nameInput.value = name;
+    const phoneInput = document.getElementById('pos-customer-phone');
+    if (phoneInput) phoneInput.value = phone || '';
+    const statusBadge = document.getElementById('pos-cust-status');
+    if (statusBadge) {
+      if (id) {
+        statusBadge.textContent = 'Found';
+        statusBadge.className = 'cust-match-badge found';
+        statusBadge.style.display = 'inline-block';
+      } else {
+        statusBadge.style.display = 'none';
+      }
+    }
+    const dropdown = document.getElementById('pos-customer-dropdown');
+    if (dropdown) dropdown.style.display = 'none';
     MediStock.closeModal();
     MediStock.toast(`Customer set to "${name}"`, 'info');
   },
@@ -739,8 +874,20 @@ window.MediStockViews.billing = {
     document.getElementById('held-count-badge').textContent = this.heldBills.length;
     this.renderItemsTable();
     this.updateTotals();
-    const custLabel = document.getElementById('pos-customer-label');
-    if (custLabel) custLabel.textContent = this.bill.customer.name;
+    const nameInput = document.getElementById('pos-customer-name');
+    if (nameInput) nameInput.value = this.bill.customer.name;
+    const phoneInput = document.getElementById('pos-customer-phone');
+    if (phoneInput) phoneInput.value = this.bill.customer.phone || '';
+    const statusBadge = document.getElementById('pos-cust-status');
+    if (statusBadge) {
+      if (this.bill.customer.id) {
+        statusBadge.textContent = 'Found';
+        statusBadge.className = 'cust-match-badge found';
+        statusBadge.style.display = 'inline-block';
+      } else {
+        statusBadge.style.display = 'none';
+      }
+    }
     MediStock.toast('Held bill restored', 'success');
   },
 
@@ -755,12 +902,20 @@ window.MediStockViews.billing = {
       notes: '',
       items: [],
     };
-    const custLabel = document.getElementById('pos-customer-label');
-    if (custLabel) custLabel.textContent = this.bill.customer.name;
+    const nameInput = document.getElementById('pos-customer-name');
+    if (nameInput) nameInput.value = this.bill.customer.name;
+    const phoneInput = document.getElementById('pos-customer-phone');
+    if (phoneInput) phoneInput.value = '';
+    const statusBadge = document.getElementById('pos-cust-status');
+    if (statusBadge) statusBadge.style.display = 'none';
     const docInput = document.getElementById('pos-doctor-name');
     if (docInput) docInput.value = '';
     const regInput = document.getElementById('pos-doctor-reg');
     if (regInput) regInput.value = '';
+    const rxPill = document.getElementById('rx-doctor-pill');
+    if (rxPill) rxPill.style.display = 'none';
+    const btnToggleRx = document.getElementById('btn-toggle-rx');
+    if (btnToggleRx) btnToggleRx.textContent = '+ Rx Doctor';
     this.renderItemsTable();
     this.updateTotals();
   },

@@ -1,17 +1,76 @@
 // renderer/js/views/settings.js
-// Pharmacy Profile, GSTIN, Drug License Numbers, and App Configuration Settings
+// Settings & System Administration — Central hub for Profile, Users, Backups, Shortcuts & 15 Tabs
 
 window.MediStockViews = window.MediStockViews || {};
 
 window.MediStockViews.settings = {
-  async render(container) {
+  activeTab: 'profile',
+
+  async render(container, preselectedTab) {
+    if (preselectedTab) this.activeTab = preselectedTab;
+
+    container.innerHTML = `
+      <div class="card" style="margin-bottom: 12px; padding: 12px 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h2 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0;">⚙️ System Settings & Administration</h2>
+            <p style="font-size: 11.5px; color: #64748b; margin: 2px 0 0;">Manage pharmacy profile, users, safe SQLite backups, keyboard shortcuts, and 15 navigation tabs.</p>
+          </div>
+          <div style="display: flex; gap: 6px;" id="settings-tab-buttons">
+            <button class="btn btn-sm ${this.activeTab === 'profile' ? 'btn-primary' : 'btn-outline'}" data-tab="profile">🏢 Company Profile</button>
+            <button class="btn btn-sm ${this.activeTab === 'users' ? 'btn-primary' : 'btn-outline'}" data-tab="users">👥 Users & Security</button>
+            <button class="btn btn-sm ${this.activeTab === 'backup' ? 'btn-primary' : 'btn-outline'}" data-tab="backup">💾 Backup & Restore</button>
+            <button class="btn btn-sm ${this.activeTab === 'shortcuts' ? 'btn-primary' : 'btn-outline'}" data-tab="shortcuts">⌨️ Shortcuts & Help</button>
+            <button class="btn btn-sm ${this.activeTab === 'tabs' ? 'btn-primary' : 'btn-outline'}" data-tab="tabs">📑 Active 15 Tabs</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="settings-subview-container"></div>
+    `;
+
+    // Bind sub-tab button clicks
+    container.querySelectorAll('#settings-tab-buttons button').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        this.activeTab = e.currentTarget.dataset.tab;
+        container.querySelectorAll('#settings-tab-buttons button').forEach((b) => {
+          b.className = `btn btn-sm ${b.dataset.tab === this.activeTab ? 'btn-primary' : 'btn-outline'}`;
+        });
+        this.renderSubTab(document.getElementById('settings-subview-container'));
+      });
+    });
+
+    this.renderSubTab(document.getElementById('settings-subview-container'));
+  },
+
+  async renderSubTab(subContainer) {
+    if (this.activeTab === 'profile') {
+      await this.renderProfileTab(subContainer);
+    } else if (this.activeTab === 'users') {
+      if (window.MediStockViews.users) {
+        window.MediStockViews.users.render(subContainer);
+      }
+    } else if (this.activeTab === 'backup') {
+      if (window.MediStockViews.backup) {
+        window.MediStockViews.backup.render(subContainer);
+      }
+    } else if (this.activeTab === 'shortcuts') {
+      if (window.MediStockViews.about) {
+        window.MediStockViews.about.render(subContainer);
+      }
+    } else if (this.activeTab === 'tabs') {
+      this.renderTabsGuide(subContainer);
+    }
+  },
+
+  async renderProfileTab(subContainer) {
     const company = await window.api.settings.getCompany();
     const settings = await window.api.settings.getAppSettings();
 
-    container.innerHTML = `
+    subContainer.innerHTML = `
       <div class="card">
         <div class="card-header">
-          <div class="card-title">⚙️ Pharmacy Profile & System Configuration</div>
+          <div class="card-title">🏢 Pharmacy Profile, Drug Licenses & Tax Rules</div>
           <button class="btn btn-primary btn-sm" id="btn-save-company-profile">Save Company Changes</button>
         </div>
 
@@ -132,6 +191,65 @@ window.MediStockViews.settings = {
         MediStock.toast(`Update error: ${err.message}`, 'error');
       }
     });
+  },
+
+  renderTabsGuide(subContainer) {
+    const tabs = [
+      { num: 1, id: 'dashboard', name: 'Dashboard', section: 'Core Billing', desc: 'KPI cards, today\'s sales, low stock alerts, near-expiry count, live charts' },
+      { num: 2, id: 'billing', name: 'Retail Billing (POS)', section: 'Core Billing', desc: 'High-speed keyboard billing (F2), direct customer name/mobile header, FEFO auto-batch' },
+      { num: 3, id: 'wholesale', name: 'Wholesale Billing', section: 'Core Billing', desc: 'Bulk trade billing, clinic/hospital challans, wholesale price groups' },
+      { num: 4, id: 'sales', name: 'Sales Invoices', section: 'Core Billing', desc: 'Invoice history, reprint A4/80mm bills, initiate verified sales returns' },
+      { num: 5, id: 'purchase', name: 'Purchase Entry', section: 'Core Billing', desc: 'Inward supplier bills, new batch creation, free strip quantity calculations' },
+      { num: 6, id: 'inventory', name: 'Batch Inventory & Stock', section: 'Inventory & Pharmacy', desc: 'Batch-wise stock levels, stock movement ledger, audited physical stock adjustments' },
+      { num: 7, id: 'expiry', name: 'Expiry & Returns', section: 'Inventory & Pharmacy', desc: 'Near-expiry alerts (30/60/90 days), expired stock quarantine, supplier debit notes' },
+      { num: 8, id: 'compliance', name: 'Schedule H/H1 Compliance', section: 'Inventory & Pharmacy', desc: 'Statutory Schedule H & H1 registers, doctor Rx tracking, batch recall audit' },
+      { num: 9, id: 'masters', name: 'Medicine Master Catalog', section: 'Inventory & Pharmacy', desc: 'Product catalog, brand names, salt compositions, HSN codes, rack/shelf locations' },
+      { num: 10, id: 'customers', name: 'Customers & Patients', section: 'Stakeholders & Books', desc: 'Customer directory, patient contact info, credit balances, purchase histories' },
+      { num: 11, id: 'suppliers', name: 'Suppliers Directory', section: 'Stakeholders & Books', desc: 'Pharmaceutical distributor records, DL/GSTIN numbers, outstanding payables' },
+      { num: 12, id: 'accounts', name: 'Double-Entry Accounts', section: 'Stakeholders & Books', desc: 'Chart of Accounts, Journal Vouchers, strictly balanced Trial Balance, P&L' },
+      { num: 13, id: 'gst', name: 'GST & Tax Reports', section: 'Stakeholders & Books', desc: 'GSTR-1 outward supplies (B2B/B2C), GSTR-3B tax offset, HSN summary' },
+      { num: 14, id: 'reports', name: 'Analytics & Reports', section: 'Stakeholders & Books', desc: 'Fast/slow moving medicines, auto-reorder recommendations, gross profit' },
+      { num: 15, id: 'settings', name: 'Settings & Administration', section: 'Administration', desc: 'All-in-one hub: Pharmacy Profile, Users, SQLite Hot Backups, and Shortcuts' }
+    ];
+
+    subContainer.innerHTML = `
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📑 Active 15 Tabs Architecture</div>
+          <span class="badge success" style="font-size: 12px; padding: 4px 10px;">Configured to Exactly 15 Navigation Tabs</span>
+        </div>
+        <p style="font-size: 12.5px; color: #475569; margin-bottom: 14px;">
+          The MediStock ERP sidebar navigation has been streamlined to <strong>exactly 15 focused tabs</strong>, grouping administrative utilities (Profile, Users, Backups, and Shortcuts) cleanly under Tab 15.
+        </p>
+
+        <div class="table-container">
+          <table class="erp-table">
+            <thead>
+              <tr>
+                <th style="width: 60px;">Tab #</th>
+                <th style="width: 140px;">Section</th>
+                <th style="width: 180px;">Tab Name</th>
+                <th>Description & Functionality</th>
+                <th style="width: 90px;" class="text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tabs.map(t => `
+                <tr>
+                  <td class="font-mono"><strong>#${t.num}</strong></td>
+                  <td><span class="badge neutral" style="font-size: 10px;">${t.section}</span></td>
+                  <td><strong>${t.name}</strong></td>
+                  <td style="font-size: 11.5px; color: #334155;">${t.desc}</td>
+                  <td class="text-center">
+                    <button class="btn btn-outline btn-xs" onclick="MediStock.navigate('${t.id}')">Open &rarr;</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
   },
 
   async saveSetting(key) {
