@@ -196,7 +196,7 @@ window.MediStockViews.settings = {
   renderTabsGuide(subContainer) {
     const tabs = [
       { num: 1, id: 'dashboard', name: 'Dashboard', section: 'Core Billing', desc: 'KPI cards, today\'s sales, low stock alerts, near-expiry count, live charts' },
-      { num: 2, id: 'billing', name: 'Retail Billing (POS)', section: 'Core Billing', desc: 'High-speed keyboard billing (F2), direct customer name/mobile header, FEFO auto-batch' },
+      { num: 2, id: 'billing', name: 'Retail Billing (POS)', section: 'Core Billing', desc: 'High-speed keyboard billing (F1: New Bill, F2: Search Medicine), direct customer name/mobile header, loose tablets & USP' },
       { num: 3, id: 'wholesale', name: 'Wholesale Billing', section: 'Core Billing', desc: 'Bulk trade billing, clinic/hospital challans, wholesale price groups' },
       { num: 4, id: 'sales', name: 'Sales Invoices', section: 'Core Billing', desc: 'Invoice history, reprint A4/80mm bills, initiate verified sales returns' },
       { num: 5, id: 'purchase', name: 'Purchase Entry', section: 'Core Billing', desc: 'Inward supplier bills, new batch creation, free strip quantity calculations' },

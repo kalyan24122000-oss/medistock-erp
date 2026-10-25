@@ -134,15 +134,38 @@ window.MediStock = {
 
   bindGlobalShortcuts() {
     document.addEventListener('keydown', (e) => {
-      // Don't intercept if user is typing in a modal or text input unless it's a dedicated function key
-      if (e.key === 'F2') {
+      // F1 or Ctrl+N or Alt+N: Start Fresh New Bill
+      if (e.key === 'F1' || ((e.ctrlKey || e.altKey) && (e.key === 'n' || e.key === 'N'))) {
         e.preventDefault();
         this.navigate('billing');
+        if (window.MediStockViews.billing) {
+          window.MediStockViews.billing.clearBill();
+        }
         setTimeout(() => {
           const inp = document.getElementById('pos-search-input');
-          if (inp) inp.focus();
+          if (inp) {
+            inp.focus();
+            inp.select();
+          }
         }, 100);
-      } else if (e.key === 'F3') {
+        this.toast('Fresh retail bill ready (F1)', 'info');
+      }
+      // F2 or Insert: Search Medicine / Barcode Scanner
+      else if (e.key === 'F2' || e.key === 'Insert') {
+        e.preventDefault();
+        if (this.activeView !== 'billing') {
+          this.navigate('billing');
+        }
+        setTimeout(() => {
+          const inp = document.getElementById('pos-search-input');
+          if (inp) {
+            inp.focus();
+            inp.select();
+          }
+        }, 80);
+      }
+      // F3: Focus Customer Name & Mobile Header Entry
+      else if (e.key === 'F3') {
         if (this.activeView === 'billing' && window.MediStockViews.billing) {
           e.preventDefault();
           const custInp = document.getElementById('pos-customer-name');
@@ -153,27 +176,45 @@ window.MediStock = {
             window.MediStockViews.billing.openCustomerModal();
           }
         }
-      } else if (e.key === 'F4') {
+      }
+      // F4: Open Full Customer Directory Modal
+      else if (e.key === 'F4') {
         if (this.activeView === 'billing' && window.MediStockViews.billing) {
           e.preventDefault();
           window.MediStockViews.billing.openCustomerModal();
         }
-      } else if (e.key === 'F8') {
+      }
+      // F8: Hold Bill
+      else if (e.key === 'F8') {
         if (this.activeView === 'billing' && window.MediStockViews.billing) {
           e.preventDefault();
           window.MediStockViews.billing.holdCurrentBill();
         }
-      } else if (e.key === 'F9') {
+      }
+      // F9: Resume Bill
+      else if (e.key === 'F9') {
         if (this.activeView === 'billing' && window.MediStockViews.billing) {
           e.preventDefault();
           window.MediStockViews.billing.resumeHeldBill();
         }
-      } else if (e.key === 'F12') {
+      }
+      // F10: Payment Mode Selection
+      else if (e.key === 'F10') {
+        if (this.activeView === 'billing') {
+          e.preventDefault();
+          const paySelect = document.getElementById('pos-payment-mode');
+          if (paySelect) paySelect.focus();
+        }
+      }
+      // F12: Save & Print Invoice
+      else if (e.key === 'F12') {
         if (this.activeView === 'billing' && window.MediStockViews.billing) {
           e.preventDefault();
           window.MediStockViews.billing.saveAndPrintInvoice();
         }
-      } else if (e.key === 'Escape') {
+      }
+      // Escape: Close active modal or clear search
+      else if (e.key === 'Escape') {
         this.closeModal();
       }
     });
@@ -195,15 +236,22 @@ window.MediStock = {
   },
 
   bindUiControls() {
-    // Topbar quick actions
+    // Topbar quick actions: New Bill (F1)
     const btnNewBill = document.getElementById('btn-quick-new-bill');
     if (btnNewBill) {
       btnNewBill.addEventListener('click', () => {
         this.navigate('billing');
+        if (window.MediStockViews.billing) {
+          window.MediStockViews.billing.clearBill();
+        }
         setTimeout(() => {
           const s = document.getElementById('pos-search-input');
-          if (s) s.focus();
+          if (s) {
+            s.focus();
+            s.select();
+          }
         }, 100);
+        this.toast('Fresh retail bill ready (F1)', 'info');
       });
     }
 

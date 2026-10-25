@@ -97,7 +97,7 @@ window.MediStockViews.billing = {
         <div class="billing-search-row">
           <div class="search-input-wrapper">
             <input type="text" id="pos-search-input" class="billing-search-input"
-                   placeholder="Type Medicine Brand Name, Salt, Generic, or Scan Barcode (F2)..." autocomplete="off">
+                   placeholder="Type Medicine Brand Name, Salt, Generic, or Scan Barcode (Press F2 or Insert)..." autocomplete="off">
             <div class="search-barcode-icon">
               <span>SCAN / SEARCH</span>
             </div>
@@ -182,12 +182,15 @@ window.MediStockViews.billing = {
 
         <!-- Shortcuts Quick Bar -->
         <div class="shortcuts-bar">
+          <div class="shortcut-chip"><kbd>F1</kbd> New Bill</div>
           <div class="shortcut-chip"><kbd>F2</kbd> Search Medicine</div>
-          <div class="shortcut-chip"><kbd>F3</kbd> Select Customer</div>
+          <div class="shortcut-chip"><kbd>F3</kbd> Customer Entry</div>
+          <div class="shortcut-chip"><kbd>F4</kbd> Customer Directory</div>
           <div class="shortcut-chip"><kbd>F8</kbd> Hold Bill</div>
           <div class="shortcut-chip"><kbd>F9</kbd> Resume Bill</div>
+          <div class="shortcut-chip"><kbd>F10</kbd> Payment Mode</div>
           <div class="shortcut-chip"><kbd>F12</kbd> Save & Print</div>
-          <div class="shortcut-chip"><kbd>Esc</kbd> Clear Search / Close Modal</div>
+          <div class="shortcut-chip"><kbd>Esc</kbd> Clear / Close</div>
         </div>
       </div>
     `;
